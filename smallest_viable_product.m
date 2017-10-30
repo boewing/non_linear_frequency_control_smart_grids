@@ -14,8 +14,10 @@ n_f(x,mygrid);
 
 
 %calculate the projected gradient
-alpha=1;
-iterations=10;
+alpha=0.1;
+iterations=100;
+x_save = zeros(1,iterations);
+costs_save = zeros(1,iterations);
 for k=1:iterations
     
     %d must be in the tangent plane defined by nabla_h(x), nabla_h(x)*d=0
@@ -23,13 +25,17 @@ for k=1:iterations
     %min|d-nabla_f(x)|^2
     d = n_f(x,mygrid)' - n_h(x,mygrid)'*inv(n_h(x,mygrid)*n_h(x,mygrid)')*n_h(x,mygrid)*n_f(x,mygrid)';
     
-    norm(h(x,mygrid))
-    x.setx(x.getx() + alpha*d);
+    x.setx(x.getx() - alpha*d);
     
     %retraction
-    x = physics(x, mygrid);
+    x = retraction(x, mygrid);
+    x_save(k) = x.v(1);
+    costs_save(k) = f(x,mygrid);
 
 end
+
+plot(costs_save);
+
 %%cost function f
     function f = f(state, mygrid)
         f = mygrid.cost_of_generation(state);
@@ -59,14 +65,14 @@ end
     
     %this is the h function with a split in a fixed part and a part to
     %change variables
-    %fix: p_g, q_g, p_ref; variable: v, theta, f
+    %fix: q_g, p_ref, f ; variable: v, theta, p_g
     function var = h_fix(mystate, mygrid, x_var)
         n=mygrid.n;
-        tempstate = state(mygrid);
+        tempstate = mystate;
         tempstate.v = x_var(1:n);
         tempstate.theta = x_var(n+1:2*n);
-        tempstate.f = x_var(end);
-        var=h(tempstate,mygrid);
+        tempstate.p_g = x_var(2*n+1:3*n);
+        var = h(tempstate,mygrid);
     end
 %%nabla h
     function n_h = n_h(mystate,mygrid) % has a reduced form: contains only the equations for p_g, q_g and p_ref
@@ -103,14 +109,21 @@ end
         N = [eye(d/2), zeros(d/2); zeros(d/2),  -eye(d/2)];
     end
 
-%%physics calculation from p_ref
+%%retraction to a physical meaningful state by adjusting v, theta, p_g, and
+%%q_g such that ||h(x)|| = 0 again.
 
-    function newstate = physics(mystate, mygrid)
+    function newstate = retraction(mystate, mygrid)
+        
         xx = mystate.getx;
-        initial_x_var = [xx(1:mygrid.n); xx(mygrid.n+1:2*mygrid.n); xx(end)];
+        initial_x_var = [xx(1:mygrid.n); xx(mygrid.n+1:2*mygrid.n); xx(2*mygrid.n+1:3*mygrid.n)];
+        assert(0==norm(h(mystate,mygrid) - h_fix(mystate,mygrid, initial_x_var)));
         new_x_var = fsolve(@(y) h_fix(mystate, mygrid, y), initial_x_var);
-        newstate = %... there has to be created a new state object
-            
+        
+        mystate.v = new_x_var(1:mygrid.n);
+        mystate.theta = new_x_var(mygrid.n+1:2*mygrid.n);
+        mystate.p_g = new_x_var(2*mygrid.n+1:3*mygrid.n);
+        newstate = mystate;
+        
     end
 
 end

@@ -22,7 +22,7 @@ classdef state < handle
            obj.q_g = imag(temp1);
            obj.p_ref = obj.p_g;
            obj.i = abs((mygrid.C*mygrid.A - mygrid.Csh*mygrid.A_t)*u);
-           obj.f = 50;
+           obj.f = 0;
        end
        
        function x = getx(obj)

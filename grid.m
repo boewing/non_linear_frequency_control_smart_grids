@@ -37,7 +37,7 @@ classdef grid
             obj.A = A;
             obj.A_t = A_t;
             
-            obj.K=[0 0 0 0]'; %stiffness of the primary frequency controller at each generator or load
+            obj.K=[0.1 -0.1 0 0.1]'; %stiffness of the primary frequency controller at each generator or load
             
             Gsh = [0 0 0 0 0]; %shunt conductance in MW at V = 1 p.u.
             Bsh = [0 0 0 19 0]; % shunt susceptance in MVar at V = 1 p.u.
@@ -50,10 +50,10 @@ classdef grid
             
             obj.v_limit = 1.06*ones(1,obj.n); %voltage limits at each node in p.u.
             
-            obj.f_upper_limit = 50.5; % in Hz
-            obj.f_lower_limit = 49.5; % in Hz
+            obj.f_upper_limit = 0.5; % in Hz
+            obj.f_lower_limit = -0.5; % in Hz
             
-            obj.cost_vector_p_g = [1 1 1 1]';
+            obj.cost_vector_p_g = [1.2 1.1 1 1]';
             obj.cost_vector_q_g = [0.1 0.1 0.1 0.2]';
         end
         
