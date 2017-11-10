@@ -69,14 +69,15 @@ classdef grid
             
         end
         
+        %marginal cost of generation
         function c = cost_of_generation(obj, mystate)
             
-            c = obj.cost_vector_p_g'*mystate.p_g + obj.cost_vector_q_g'*mystate.q_g;
+            c = obj.cost_vector_p_g'*mystate.p_g + obj.cost_vector_q_g'*mystate.q_g.^2;
         end
         
         function cD = cost_of_generationD(obj, mystate)
             
-            cD = [zeros(1, 2*obj.n), obj.cost_vector_p_g', obj.cost_vector_q_g', zeros(1,obj.n), zeros(1,2*obj.m), 0];
+            cD = [zeros(1, 2*obj.n), obj.cost_vector_p_g', 2*(obj.cost_vector_q_g.*mystate.q_g)', zeros(1,obj.n), zeros(1,2*obj.m), 0];
         end
     end
 end

@@ -4,6 +4,8 @@ classdef Recorder < handle
     %or current trajectories and plot them according to the wishes.
     properties
         x_save
+        f_function_save
+        h_function_save
         iteration
         m
         n
@@ -11,11 +13,13 @@ classdef Recorder < handle
         line_legend
     end
     methods
-        function obj = Recorder(mystate, iterations)
+        function obj = Recorder(mystate,f_function,h_function, iterations)
             x = mystate.getx();
             obj.m = length(mystate.i)/2;
             obj.n = length(mystate.v);
             obj.x_save = [x,zeros(length(x),iterations)];
+            obj.f_function_save = [f_function,zeros(1,iterations)];
+            obj.h_function_save = [h_function,zeros(1,iterations)];
             obj.iteration = 1;
             
             for i=1:obj.n
@@ -32,8 +36,10 @@ classdef Recorder < handle
 %             x_save(i) = mystate.getx();
 %         end
         
-        function store(obj, mystate)
+        function store(obj, mystate, f_function, h_function)
             obj.iteration = obj.iteration + 1;
+            obj.f_function_save(:,obj.iteration) = f_function;
+            obj.h_function_save(:,obj.iteration) = h_function;
             obj.x_save(:,obj.iteration) = mystate.getx();
         end
         function plotV(obj)
@@ -46,15 +52,17 @@ classdef Recorder < handle
             f2 = figure(2);
             f2.Position = [0 0 1900 1000];
             mp = 2;
-            np = 3;
+            np = 4;
             m = obj.m;
             n = obj.n;
             v = subplot(mp,np,1);
             i = subplot(mp,np,2);
             f = subplot(mp,np,3);
-            p_g = subplot(mp,np,4);
-            q_g = subplot(mp,np,5);
-            p_ref = subplot(mp,np,6);
+            p_g = subplot(mp,np,5);
+            q_g = subplot(mp,np,6);
+            p_ref = subplot(mp,np,7);
+            f_function = subplot(mp,np,4);
+            h_function = subplot(mp,np,8);
             
             plot(v,obj.x_save(1:obj.n,1:obj.iteration)');
             ylabel(v,'v: Voltage amplitude [p.u.]');
@@ -84,6 +92,14 @@ classdef Recorder < handle
             ylabel(p_ref,'p_{ref}: Reference value for prim. frequency controller [p.u]');
             xlabel(p_ref,'Iterations');
             legend(p_ref,obj.node_legend);
+            
+            plot(f_function, obj.f_function_save(:,1:obj.iteration)');
+            ylabel(f_function,'f(x): cost function value');
+            xlabel(f_function,'Iterations');          
+            
+            plot(h_function, obj.h_function_save(:,1:obj.iteration)');
+            ylabel(h_function,'h(x): staying in the physical valid space');
+            xlabel(h_function,'Iterations');
         end
     end
     

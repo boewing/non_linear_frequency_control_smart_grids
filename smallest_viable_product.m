@@ -10,7 +10,7 @@ x = state(mygrid);
 %calculate the projected gradient
 alpha=0.2;
 iterations=500;
-myrec = Recorder(x, iterations);
+myrec = Recorder(x, f(x,mygrid),norm(h(x,mygrid)),iterations);
 for k=1:iterations
     
     %calculate a feasible gradient
@@ -40,7 +40,7 @@ for k=1:iterations
     ctrl_angle_correction(x);
     
     %recording
-    myrec.store(x);
+    myrec.store(x,f(x,mygrid),norm(h(x,mygrid)));
     
 end
 
