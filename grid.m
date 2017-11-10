@@ -11,9 +11,14 @@ classdef grid
         m
         K
         i_limit
+        penalty_factor_i
         v_limit
+        penalty_factor_v
+        p_ref_upper_limit
+        p_ref_lower_limit
         f_upper_limit
         f_lower_limit
+        penalty_factor_f
         cost_vector_p_g
         cost_vector_q_g
     end
@@ -37,7 +42,7 @@ classdef grid
             obj.A = A;
             obj.A_t = A_t;
             
-            obj.K=[0.1 -0.1 0 0.1]'; %stiffness of the primary frequency controller at each generator or load
+            obj.K=[0.1 0.1 0 -0.01]'; %stiffness of the primary frequency controller at each generator or load in 1/Hz
             
             Gsh = [0 0 0 0 0]; %shunt conductance in MW at V = 1 p.u.
             Bsh = [0 0 0 19 0]; % shunt susceptance in MVar at V = 1 p.u.
@@ -46,15 +51,22 @@ classdef grid
             
             %limits
             
-            obj.i_limit = 1.06*ones(1,2*obj.m); % line current limit in p.u.
+            obj.i_limit = 1.06*ones(2*obj.m,1); % line current limit in p.u.
+            obj.penalty_factor_i = 10;
             
-            obj.v_limit = 1.06*ones(1,obj.n); %voltage limits at each node in p.u.
+            obj.v_limit = 1.06*ones(obj.n,1); %voltage limits at each node in p.u.
+            obj.penalty_factor_v = 5;
+            
+            obj.p_ref_upper_limit = [ 1.0;  0.6; -0.2; -0.36];
+            obj.p_ref_lower_limit = [   0;    0; -0.3; -0.36];
             
             obj.f_upper_limit = 0.5; % in Hz
             obj.f_lower_limit = -0.5; % in Hz
+            obj.penalty_factor_f = 1;
             
-            obj.cost_vector_p_g = [1.2 1.1 1 1]';
+            obj.cost_vector_p_g = [  2 1.1   1   1]';
             obj.cost_vector_q_g = [0.1 0.1 0.1 0.2]';
+            
         end
         
         function c = cost_of_generation(obj, mystate)
@@ -62,9 +74,9 @@ classdef grid
             c = obj.cost_vector_p_g'*mystate.p_g + obj.cost_vector_q_g'*mystate.q_g;
         end
         
-        function cD = cost_of_generationD(obj, state)
+        function cD = cost_of_generationD(obj, mystate)
             
-            cD = [zeros(1, 2*obj.n), obj.cost_vector_p_g', obj.cost_vector_q_g', zeros(1,obj.n), 0];
+            cD = [zeros(1, 2*obj.n), obj.cost_vector_p_g', obj.cost_vector_q_g', zeros(1,obj.n), zeros(1,2*obj.m), 0];
         end
     end
 end
