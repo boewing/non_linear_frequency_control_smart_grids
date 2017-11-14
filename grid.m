@@ -16,6 +16,8 @@ classdef grid
         penalty_factor_v
         p_ref_upper_limit
         p_ref_lower_limit
+        penalty_factor_S
+        S_limit
         f_upper_limit
         f_lower_limit
         penalty_factor_f
@@ -59,6 +61,8 @@ classdef grid
             
             obj.p_ref_upper_limit = [ 1.0;  0.6; -0.2; -0.36];
             obj.p_ref_lower_limit = [   0;    0; -0.3; -0.36];
+            obj.penalty_factor_S =  2;
+            obj.S_limit =           [ 1.0;  1.0;  Inf;   Inf];
             
             obj.f_upper_limit = 0.5; % in Hz
             obj.f_lower_limit = -0.5; % in Hz
