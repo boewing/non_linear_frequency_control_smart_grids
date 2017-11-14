@@ -88,7 +88,7 @@ classdef Recorder < handle
             xlabel(q_g,'Iterations');
             legend(q_g,obj.node_legend);
             
-            plot(p_ref, obj.x_save(3*n+1:4*n,1:obj.iteration)');
+            plot(p_ref, obj.x_save(4*n+1:5*n,1:obj.iteration)');
             ylabel(p_ref,'p_{ref}: Reference value for prim. frequency controller [p.u]');
             xlabel(p_ref,'Iterations');
             legend(p_ref,obj.node_legend);
