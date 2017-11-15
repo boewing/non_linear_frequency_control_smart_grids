@@ -85,7 +85,7 @@ myrec.plotAll();
         + getPenaltyI(state, mygrid) ...
         + getPenaltyV(state, mygrid) ...
         + getPenaltyF(state, mygrid) ...
-        + 0*getPenaltyS(state, mygrid);
+        + getPenaltyS(state, mygrid);
     end
 
     function val = n_Jt(state, mygrid)
@@ -93,7 +93,7 @@ myrec.plotAll();
             + getPenaltyID(state, mygrid) ...
             + getPenaltyVD(state, mygrid) ...
             + getPenaltyFD(state, mygrid) ...
-            + 0*getPenaltySD(state, mygrid);
+            + getPenaltySD(state, mygrid);
             
     end
 
@@ -104,7 +104,7 @@ myrec.plotAll();
     function val = getPenaltySD(state, mygrid)
         within_limits = (state.p_g.^2 + state.q_g.^2 <= mygrid.S_limit);
         if min(within_limits) == 0
-            disp( 'S limit reached');
+            disp( 'S limit reached for at least one generator');
         end
         pq_D = [2*(1-within_limits').*state.p_g', 2*(1-within_limits').*state.q_g'];
         val = mygrid.penalty_factor_S*[zeros(1,2*mygrid.n), pq_D, zeros(1,mygrid.n + 2*mygrid.m + 1)];
