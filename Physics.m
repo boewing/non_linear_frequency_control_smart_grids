@@ -2,10 +2,6 @@ classdef Physics < handle
     %this class is able to calculate the system response according to the
     %controller input and the grid properties. more specific it is able to
     %bring an infeasible state back to a feasible one by retraction.
-    properties
-        
-        
-    end
     
     methods(Static)
         

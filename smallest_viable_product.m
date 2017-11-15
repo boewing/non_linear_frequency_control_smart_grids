@@ -1,14 +1,12 @@
 function smallest_viable_product()
 
-close
 %%building up the network from constants
 mygrid = Grid();
 
 %%state initialisation
 x = State(mygrid);
 
-%calculate the projected gradient
-alpha=0.2;
+%run the simulation
 iterations=500;
 myrec = Recorder(x, Controller.Jt(x,mygrid),norm(Physics.h(x,mygrid)),iterations);
 for k=1:iterations
@@ -17,12 +15,11 @@ for k=1:iterations
     %d must be in the tangent plane defined by nabla_h(x), nabla_h(x)*d=0
     %d must be as close to the negative gradient of the cost function as possible:
     %min|d-nabla_Jt(x)|^2
-    %analytic version without constraints: d = n_Jt(x,mygrid)' - n_h(x,mygrid)'*inv(n_h(x,mygrid)*n_h(x,mygrid)')*n_h(x,mygrid)*n_Jt(x,mygrid)';
-    
+    %analytic version without constraints: d = n_Jt(x,mygrid)' - n_h(x,mygrid)'*inv(n_h(x,mygrid)*n_h(x,mygrid)')*n_h(x,mygrid)*n_Jt(x,mygrid)';    
     d = Controller.getStep(x, mygrid);
         
     %make a step
-    x.setx(x.getx() + alpha*d);
+    x.setx(x.getx() + d);
     
     %retraction
     assert(x.theta(1)==0, 'reference bus has non-zero voltage angle');              %check that the angle reference stays 0

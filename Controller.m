@@ -4,12 +4,13 @@ classdef Controller < handle
         penalty_factor_v = 5
         penalty_factor_S = 2
         penalty_factor_f = 2.5
+        step_size = 0.2
     end
     
     methods(Static)
         function d = getStep(x, mygrid)
             H=eye(5*mygrid.n + 2*mygrid.m + 1);
-            ff = Controller.n_Jt(x,mygrid);
+            ff = Controller.step_size*Controller.n_Jt(x,mygrid);
             Aeq = Physics.n_h(x,mygrid);
             beq = zeros(size(Aeq,1),1);
             [lb, ub] = mygrid.bounds(x);

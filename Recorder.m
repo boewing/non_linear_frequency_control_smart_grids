@@ -6,9 +6,9 @@ classdef Recorder < handle
         x_save
         f_function_save
         h_function_save
-        iteration
-        transient_length
-        start_disp
+        iteration               = 1
+        transient_length        = 20
+        start_disp              = 1
         m
         n
         node_legend
@@ -22,9 +22,6 @@ classdef Recorder < handle
             obj.x_save = [x,zeros(length(x),iterations)];
             obj.f_function_save = [f_function,zeros(1,iterations)];
             obj.h_function_save = [h_function,zeros(1,iterations)];
-            obj.iteration = 1;
-            obj.transient_length = 50;
-            obj.start_disp = 1;
             
             for i=1:obj.n
                 obj.node_legend{i} = ['Node ', num2str(i)];
@@ -35,10 +32,6 @@ classdef Recorder < handle
                 obj.line_legend{i+obj.m} = ['Line (opp. dir.)', num2str(i)];
             end
         end
-        
-%         function store(obj, mystate, i)
-%             x_save(i) = mystate.getx();
-%         end
         
         function store(obj, mystate, f_function, h_function)
             obj.iteration = obj.iteration + 1;
