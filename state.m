@@ -11,9 +11,9 @@ classdef state < handle
     
     methods
         function obj = state(mygrid)
-            obj.v = ones(mygrid.n,1);
+%            obj.v = ones(mygrid.n,1);
             obj.theta = zeros(mygrid.n,1);
-%             obj.v = [1.02, 1.015, 0.98, 1]';
+            obj.v = [1.02, 1.015, 0.98, 1]';
             
 %             obj.theta = 2*pi/360*[0, 0, 0 ,0]';
             

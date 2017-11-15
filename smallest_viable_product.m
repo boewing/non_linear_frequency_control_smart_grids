@@ -49,8 +49,8 @@ myrec.plotAll();
     function [lb, ub] = bounds(state,mygrid)
 
     v_max_rel = Inf*ones(mygrid.n,1);
-%     v_min_rel = - state.v;
-v_min_rel = -Inf*ones(mygrid.n,1);
+    v_min_rel = - state.v;
+%    v_min_rel = -Inf*ones(mygrid.n,1);
     
     theta_max_rel = [0; Inf*ones(mygrid.n-1,1)];
     theta_min_rel = [0; -Inf*ones(mygrid.n-1,1)];
@@ -68,8 +68,8 @@ v_min_rel = -Inf*ones(mygrid.n,1);
 %     p_ref_min_rel = -Inf*abs((mygrid.p_ref_lower_limit - state.p_ref));
     
     i_max_rel = Inf*ones(2*mygrid.m,1);
-%     i_min_rel = - state.i;
-    i_min_rel = - Inf*ones(2*mygrid.m,1);
+    i_min_rel = - state.i;
+%    i_min_rel = - Inf*ones(2*mygrid.m,1);
     
     f_max_rel = Inf;
     f_min_rel = -Inf;
@@ -85,7 +85,7 @@ v_min_rel = -Inf*ones(mygrid.n,1);
         + getPenaltyI(state, mygrid) ...
         + getPenaltyV(state, mygrid) ...
         + getPenaltyF(state, mygrid) ...
-        + getPenaltyS(state, mygrid);
+        + 0*getPenaltyS(state, mygrid);
     end
 
     function val = n_Jt(state, mygrid)
@@ -93,7 +93,7 @@ v_min_rel = -Inf*ones(mygrid.n,1);
             + getPenaltyID(state, mygrid) ...
             + getPenaltyVD(state, mygrid) ...
             + getPenaltyFD(state, mygrid) ...
-            + getPenaltySD(state, mygrid);
+            + 0*getPenaltySD(state, mygrid);
             
     end
 
@@ -215,7 +215,7 @@ v_min_rel = -Inf*ones(mygrid.n,1);
         %                   v               theta(2:n)                   p_g
         initial_x_var = [xx(1:mygrid.n); xx(2+mygrid.n:2*mygrid.n); xx(1+2*mygrid.n:3*mygrid.n); xx(1+5*mygrid.n:2*mygrid.m+5*mygrid.n);xx(2*mygrid.m+5*mygrid.n + 1)];
         assert(0==norm(h(mystate,mygrid) - h_fix(mystate,mygrid, initial_x_var)));
-        new_x_var = fsolve(@(y) h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','FunctionTolerance',1e-8));
+        new_x_var = fsolve(@(y) h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-8));
         
         mystate.v = new_x_var(1:mygrid.n);
         mystate.theta = [xx(1+mygrid.n); new_x_var(mygrid.n+1:2*mygrid.n-1)];
