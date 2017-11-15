@@ -64,9 +64,9 @@ classdef grid
             obj.penalty_factor_S =  2;
             obj.S_limit =           [ 1.0;  1.0;  Inf;   Inf];
             
-            obj.f_upper_limit = 0.5; % in Hz
-            obj.f_lower_limit = -0.5; % in Hz
-            obj.penalty_factor_f = 1;
+            obj.f_upper_limit = 0.0; % in Hz
+            obj.f_lower_limit = -0.0; % in Hz
+            obj.penalty_factor_f = 2.5;
             
             obj.cost_vector_p_g = [  2 1.1   1   1]';
             obj.cost_vector_q_g = [0.1 0.1 0.1 0.2]';

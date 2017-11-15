@@ -132,7 +132,7 @@ myrec.plotAll();
     end
 
     function val = getPenaltyFD(mystate,mygrid)
-        val = mygrid.penalty_factor_f*[zeros(1,5*mygrid.n + 2*mygrid.m), 2*(max(mystate.f - mygrid.f_upper_limit,0) + max(-mystate.f + mygrid.f_lower_limit,0))];
+        val = mygrid.penalty_factor_f*[zeros(1,5*mygrid.n + 2*mygrid.m), 2*(max(mystate.f - mygrid.f_upper_limit,0) + (-1)*max(-mystate.f + mygrid.f_lower_limit,0))];
     end
 
 %%equality constraints function h
