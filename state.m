@@ -1,4 +1,4 @@
-classdef state < handle
+classdef State < handle
     properties
         v
         theta
@@ -10,7 +10,7 @@ classdef state < handle
     end
     
     methods
-        function obj = state(mygrid)
+        function obj = State(mygrid)
             obj.v = ones(mygrid.n,1);
             obj.theta = zeros(mygrid.n,1);
             

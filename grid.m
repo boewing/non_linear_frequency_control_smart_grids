@@ -1,4 +1,4 @@
-classdef grid
+classdef Grid
     properties
         base_MVA
         base_V
@@ -26,7 +26,7 @@ classdef grid
     end
     
     methods
-        function obj = grid()
+        function obj = Grid()
             %definition of p.u. base units
             base_MVA = 100;
             base_MV = 0.132;
@@ -83,5 +83,39 @@ classdef grid
             
             cD = [zeros(1, 2*obj.n), obj.cost_vector_p_g', 2*(obj.cost_vector_q_g.*mystate.q_g)', zeros(1,obj.n), zeros(1,2*obj.m), 0];
         end
+        
+                function [lb, ub] = bounds(obj, state)
+            
+            v_max_rel = Inf*ones(obj.n,1);
+            v_min_rel = - state.v;
+            %    v_min_rel = -Inf*ones(mygrid.n,1);
+            
+            theta_max_rel = [0; Inf*ones(obj.n-1,1)];
+            theta_min_rel = [0; -Inf*ones(obj.n-1,1)];
+            
+            p_g_max_rel = Inf*ones(obj.n,1);
+            p_g_min_rel = -Inf*ones(obj.n,1);
+            
+            q_g_max_rel = Inf*ones(obj.n,1);
+            q_g_min_rel = -Inf*ones(obj.n,1);
+            
+            p_ref_max_rel = obj.p_ref_upper_limit - state.p_ref;
+            p_ref_min_rel = obj.p_ref_lower_limit - state.p_ref;
+            
+            %     p_ref_max_rel = Inf*abs((obj.p_ref_upper_limit - state.p_ref));
+            %     p_ref_min_rel = -Inf*abs((obj.p_ref_lower_limit - state.p_ref));
+            
+            i_max_rel = Inf*ones(2*obj.m,1);
+            i_min_rel = - state.i;
+            %    i_min_rel = - Inf*ones(2*obj.m,1);
+            
+            f_max_rel = Inf;
+            f_min_rel = -Inf;
+            
+            ub = [v_max_rel; theta_max_rel; p_g_max_rel; q_g_max_rel; p_ref_max_rel; i_max_rel; f_max_rel];
+            lb = [v_min_rel; theta_min_rel; p_g_min_rel; q_g_min_rel; p_ref_min_rel; i_min_rel; f_min_rel];
+            
+        end
+
     end
 end

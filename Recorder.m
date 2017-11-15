@@ -7,6 +7,8 @@ classdef Recorder < handle
         f_function_save
         h_function_save
         iteration
+        transient_length
+        start_disp
         m
         n
         node_legend
@@ -21,6 +23,8 @@ classdef Recorder < handle
             obj.f_function_save = [f_function,zeros(1,iterations)];
             obj.h_function_save = [h_function,zeros(1,iterations)];
             obj.iteration = 1;
+            obj.transient_length = 50;
+            obj.start_disp = 1;
             
             for i=1:obj.n
                 obj.node_legend{i} = ['Node ', num2str(i)];
@@ -41,6 +45,7 @@ classdef Recorder < handle
             obj.f_function_save(:,obj.iteration) = f_function;
             obj.h_function_save(:,obj.iteration) = h_function;
             obj.x_save(:,obj.iteration) = mystate.getx();
+            obj.start_disp = min(obj.transient_length, obj.iteration);
         end
         function plotV(obj)
             figure(1);
@@ -64,40 +69,40 @@ classdef Recorder < handle
             f_function = subplot(mp,np,4);
             h_function = subplot(mp,np,8);
             
-            plot(v,obj.x_save(1:obj.n,1:obj.iteration)');
+            plot(v,obj.x_save(1:obj.n,obj.start_disp:obj.iteration)');
             ylabel(v,'v: Voltage amplitude [p.u.]');
             xlabel(v,'Iterations');
             legend(v,obj.node_legend);
             
-            plot(i, obj.x_save(5*n+1:5*n+2*m,1:obj.iteration)');
+            plot(i, obj.x_save(5*n+1:5*n+2*m,obj.start_disp:obj.iteration)');
             ylabel(i,'i: Current amplitude [p.u.]');
             xlabel(i,'Iterations');
             legend(i,obj.line_legend);
             
-            plot(f, obj.x_save(end,1:obj.iteration)');
+            plot(f, obj.x_save(end,obj.start_disp:obj.iteration)');
             ylabel(f,'f: Frequency deviation [Hz]');
             xlabel(f,'Iterations');
             
-            plot(p_g, obj.x_save(2*n+1:3*n,1:obj.iteration)');
+            plot(p_g, obj.x_save(2*n+1:3*n,obj.start_disp:obj.iteration)');
             ylabel(p_g,'p_g: Active Power generated [p.u]');
             xlabel(p_g,'Iterations');
             legend(p_g,obj.node_legend);
             
-            plot(q_g, obj.x_save(3*n+1:4*n,1:obj.iteration)');
+            plot(q_g, obj.x_save(3*n+1:4*n,obj.start_disp:obj.iteration)');
             ylabel(q_g,'q_g: Reactive Power generated [p.u]');
             xlabel(q_g,'Iterations');
             legend(q_g,obj.node_legend);
             
-            plot(p_ref, obj.x_save(4*n+1:5*n,1:obj.iteration)');
+            plot(p_ref, obj.x_save(4*n+1:5*n,obj.start_disp:obj.iteration)');
             ylabel(p_ref,'p_{ref}: Reference value for prim. frequency controller [p.u]');
             xlabel(p_ref,'Iterations');
             legend(p_ref,obj.node_legend);
             
-            plot(f_function, obj.f_function_save(:,1:obj.iteration)');
+            plot(f_function, obj.f_function_save(:,obj.start_disp:obj.iteration)');
             ylabel(f_function,'f(x): cost function value');
             xlabel(f_function,'Iterations');          
             
-            plot(h_function, obj.h_function_save(:,1:obj.iteration)');
+            plot(h_function, obj.h_function_save(:,obj.start_disp:obj.iteration)');
             ylabel(h_function,'h(x): staying in the physical valid space');
             xlabel(h_function,'Iterations');
         end
