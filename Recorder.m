@@ -4,10 +4,15 @@ classdef Recorder < handle
     %or current trajectories and plot them according to the wishes.
     properties
         x_save
+        v_limit_reached
+        i_limit_reached
+        f_limit_reached
+        p_g_limit_reached
+        q_g_limit_reached
         f_function_save
         h_function_save
-        iteration               = 1
-        transient_length        = 20
+        iteration               = 0
+        transient_length        = 1
         start_disp              = 1
         m
         n
@@ -23,6 +28,8 @@ classdef Recorder < handle
             obj.f_function_save = [f_function,zeros(1,iterations)];
             obj.h_function_save = [h_function,zeros(1,iterations)];
             
+            obj.v_limit_reached = false(length(x),1);
+            
             for i=1:obj.n
                 obj.node_legend{i} = ['Node ', num2str(i)];
             end
@@ -34,11 +41,22 @@ classdef Recorder < handle
         end
         
         function store(obj, mystate, f_function, h_function)
-            obj.iteration = obj.iteration + 1;
             obj.f_function_save(:,obj.iteration) = f_function;
             obj.h_function_save(:,obj.iteration) = h_function;
             obj.x_save(:,obj.iteration) = mystate.getx();
             obj.start_disp = min(obj.transient_length, obj.iteration);
+        end
+        
+        function count(obj)
+            obj.iteration = obj.iteration + 1;
+        end
+        
+        function store_limits(obj, mystate, mygrid)
+            obj.v_limit_reached(:,obj.iteration) = logical(Controller.v_limit_reached(mystate, mygrid));
+            obj.i_limit_reached = Controller.i_limit_reached(mystate, mygrid);
+            obj.f_limit_reached = Controller.f_limit_reached(mystate, mygrid);
+            obj.p_g_limit_reached = Controller.S_limit_reached(mystate, mygrid);
+            obj.q_g_limit_reached = Controller.S_limit_reached(mystate, mygrid);
         end
         function plotV(obj)
             figure(1);
@@ -48,6 +66,7 @@ classdef Recorder < handle
         end
         function plotAll(obj)
             f2 = figure(2);
+            clf
             f2.Position = [0 0 1900 1000];
             mp = 2;
             np = 4;
@@ -62,19 +81,36 @@ classdef Recorder < handle
             f_function = subplot(mp,np,4);
             h_function = subplot(mp,np,8);
             
+            hold(v,'on')
             plot(v,obj.x_save(1:obj.n,obj.start_disp:obj.iteration)');
+
+            for k=1:obj.n
+                obj.v_limit_reached(k,:)
+                line = logical(zeros(1,31));
+                line(k)=1;
+                nn=1:size(obj.x_save,2)
+                nn(obj.v_limit_reached(k,:))
+                obj.x_save(line, obj.v_limit_reached(k,:))'
+                plot(v,nn(obj.v_limit_reached(k,obj.start_disp:obj.iteration)),obj.x_save(line, obj.v_limit_reached(k,obj.start_disp:obj.iteration))','ok','LineWidth',1);
+            end
             ylabel(v,'v: Voltage amplitude [p.u.]');
             xlabel(v,'Iterations');
             legend(v,obj.node_legend);
-            
+            hold(v,'off')
+
+            hold(i,'on')
             plot(i, obj.x_save(5*n+1:5*n+2*m,obj.start_disp:obj.iteration)');
             ylabel(i,'i: Current amplitude [p.u.]');
             xlabel(i,'Iterations');
             legend(i,obj.line_legend);
+            hold(i,'off')
             
+            hold(f,'on')
+            plot(f, obj.x_save(end,obj.start_disp:obj.iteration)');
             plot(f, obj.x_save(end,obj.start_disp:obj.iteration)');
             ylabel(f,'f: Frequency deviation [Hz]');
             xlabel(f,'Iterations');
+            hold(f,'off')
             
             plot(p_g, obj.x_save(2*n+1:3*n,obj.start_disp:obj.iteration)');
             ylabel(p_g,'p_g: Active Power generated [p.u]');
@@ -98,7 +134,10 @@ classdef Recorder < handle
             plot(h_function, obj.h_function_save(:,obj.start_disp:obj.iteration)');
             ylabel(h_function,'h(x): staying in the physical valid space');
             xlabel(h_function,'Iterations');
+            
+            hold off
         end
+      
     end
     
 end

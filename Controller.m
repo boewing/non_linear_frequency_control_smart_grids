@@ -8,6 +8,23 @@ classdef Controller < handle
     end
     
     methods(Static)
+        function v_limit = v_limit_reached(x, mygrid)
+            v_limit = (0 ~= Controller.getPenaltyVD(x, mygrid)');
+        end
+        
+        function i_limit = i_limit_reached(x,mygrid)
+            i_limit = (0 ~= Controller.getPenaltyID(x, mygrid));
+            
+        end
+        
+        function f_limit = f_limit_reached(x,mygrid)
+            f_limit = (0 ~= Controller.getPenaltyFD(x, mygrid));            
+        end
+        
+        function S_limit = S_limit_reached(x,mygrid)
+            S_limit = (0 ~= Controller.getPenaltySD(x, mygrid));
+        end
+        
         function d = getStep(x, mygrid)
             H=eye(5*mygrid.n + 2*mygrid.m + 1);
             ff = Controller.step_size*Controller.n_Jt(x,mygrid);
