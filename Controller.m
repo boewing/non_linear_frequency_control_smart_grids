@@ -13,8 +13,7 @@ classdef Controller < handle
         end
         
         function i_limit = i_limit_reached(x,mygrid)
-            i_limit = (0 ~= Controller.getPenaltyID(x, mygrid));
-            
+            i_limit = (0 ~= Controller.getPenaltyID(x, mygrid)');
         end
         
         function f_limit = f_limit_reached(x,mygrid)
@@ -22,7 +21,7 @@ classdef Controller < handle
         end
         
         function S_limit = S_limit_reached(x,mygrid)
-            S_limit = (0 ~= Controller.getPenaltySD(x, mygrid));
+            S_limit = (0 ~= Controller.getPenaltySD(x, mygrid)');
         end
         
         function d = getStep(x, mygrid)
