@@ -5,7 +5,7 @@ mygrid = Grid();
 x = State(mygrid);
 
 %run the simulation and record
-iterations=50;
+iterations=500;
 myrec = Recorder(x, Controller.Jt(x,mygrid),norm(Physics.h(x,mygrid)),iterations);
 
 for k=1:iterations
@@ -15,7 +15,7 @@ for k=1:iterations
     %d must be as close to the negative gradient of the cost function as possible:
     %min|d-nabla_Jt(x)|^2
     %analytic version without constraints: d = n_Jt(x,mygrid)' - n_h(x,mygrid)'*inv(n_h(x,mygrid)*n_h(x,mygrid)')*n_h(x,mygrid)*n_Jt(x,mygrid)';
-    d = Controller.getStep(x, mygrid);
+    d = Controller.getStep(x, mygrid, k);
     
     %make a step
     x.setx(x.getx() + d);

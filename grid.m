@@ -14,8 +14,8 @@ classdef Grid
         penalty_factor_i
         v_limit
         penalty_factor_v
-        p_ref_upper_limit
-        p_ref_lower_limit
+        p_ref_upper_limit_base
+        p_ref_lower_limit_base
         penalty_factor_S
         S_limit
         f_upper_limit
@@ -59,8 +59,8 @@ classdef Grid
             obj.v_limit = 1.06*ones(obj.n,1); %voltage limits at each node in p.u.
             obj.penalty_factor_v = 5;
             
-            obj.p_ref_upper_limit = [ 1.0;  0.6; -0.2; -0.36];
-            obj.p_ref_lower_limit = [   0;    0; -0.3; -0.36];
+            obj.p_ref_upper_limit_base = [ 1.0;  0.6; -0.2; -0.36];
+            obj.p_ref_lower_limit_base = [   0;    0; -0.3; -0.36];
             obj.penalty_factor_S =  2;
             obj.S_limit =           [ 1.0;  1.0;  Inf;   Inf];
             
@@ -84,7 +84,14 @@ classdef Grid
             cD = [zeros(1, 2*obj.n), obj.cost_vector_p_g', 2*(obj.cost_vector_q_g.*mystate.q_g)', zeros(1,obj.n), zeros(1,2*obj.m), 0];
         end
         
-                function [lb, ub] = bounds(obj, state)
+        function upper = p_ref_upper_limit(obj,time)
+            upper = (0.5+cos(2*pi*time/400)^2)*min(obj.p_ref_upper_limit_base,0) + max(obj.p_ref_upper_limit_base,0);
+        end
+        function lower = p_ref_lower_limit(obj,time)
+            lower = (0.5+cos(2*pi*time/400)^2)*min(obj.p_ref_lower_limit_base,0) + max(obj.p_ref_lower_limit_base,0);
+        end
+        
+        function [lb, ub] = bounds(obj, state, time)
             
             v_max_rel = Inf*ones(obj.n,1);
             v_min_rel = - state.v;
@@ -99,8 +106,8 @@ classdef Grid
             q_g_max_rel = Inf*ones(obj.n,1);
             q_g_min_rel = -Inf*ones(obj.n,1);
             
-            p_ref_max_rel = obj.p_ref_upper_limit - state.p_ref;
-            p_ref_min_rel = obj.p_ref_lower_limit - state.p_ref;
+            p_ref_max_rel = obj.p_ref_upper_limit(time) - state.p_ref;
+            p_ref_min_rel = obj.p_ref_lower_limit(time) - state.p_ref;
             
             %     p_ref_max_rel = Inf*abs((obj.p_ref_upper_limit - state.p_ref));
             %     p_ref_min_rel = -Inf*abs((obj.p_ref_lower_limit - state.p_ref));

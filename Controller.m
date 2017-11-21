@@ -3,7 +3,7 @@ classdef Controller < handle
         penalty_factor_i = 10
         penalty_factor_v = 5
         penalty_factor_S = 2
-        penalty_factor_f = 2.5
+        penalty_factor_f = 3
         step_size = 0.2
     end
     
@@ -17,19 +17,20 @@ classdef Controller < handle
         end
         
         function f_limit = f_limit_reached(x,mygrid)
-            f_limit = (0 ~= Controller.getPenaltyFD(x, mygrid));            
+            %f_limit = (0 ~= Controller.getPenaltyFD(x, mygrid));
+            f_limit = (abs(x.f) > 10e-3);
         end
         
         function S_limit = S_limit_reached(x,mygrid)
             S_limit = (0 ~= Controller.getPenaltySD(x, mygrid)');
         end
         
-        function d = getStep(x, mygrid)
+        function d = getStep(x, mygrid, k)
             H=eye(5*mygrid.n + 2*mygrid.m + 1);
             ff = Controller.step_size*Controller.n_Jt(x,mygrid);
             Aeq = Physics.n_h(x,mygrid);
             beq = zeros(size(Aeq,1),1);
-            [lb, ub] = mygrid.bounds(x);
+            [lb, ub] = mygrid.bounds(x,k);
             d = quadprog(H,ff,[],[],Aeq,beq,lb,ub,[],optimoptions('quadprog','Display','off'));  
             %     assert(max(Aeq*d) < 1e-10, 'next step is not in the tangent plane');
         end

@@ -14,9 +14,9 @@ classdef State < handle
             obj.v = ones(mygrid.n,1);
             obj.theta = zeros(mygrid.n,1);
             
-            min_demand = -sum(min(mygrid.p_ref_upper_limit,0));
-            max_production = sum(max(mygrid.p_ref_upper_limit,0));
-            obj.p_ref = min_demand/max_production*max(mygrid.p_ref_upper_limit,0) + min(mygrid.p_ref_upper_limit,0); %if load: set it to the minimal load, if generator: set it such that it has proportional share of the loads
+            min_demand = -sum(min(mygrid.p_ref_upper_limit_base,0));
+            max_production = sum(max(mygrid.p_ref_upper_limit_base,0));
+            obj.p_ref = min_demand/max_production*max(mygrid.p_ref_upper_limit_base,0) + min(mygrid.p_ref_upper_limit_base,0); %if load: set it to the minimal load, if generator: set it such that it has proportional share of the loads
             assert(abs(sum(obj.p_ref)) <= 1e-10);
             obj.p_g = obj.p_ref;
             obj.q_g = zeros(mygrid.n,1);
