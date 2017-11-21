@@ -12,7 +12,7 @@ classdef Recorder < handle
         f_function_save
         h_function_save
         iteration               = 0
-        transient_length        = 1
+        transient_length        = 100
         start_disp              = 1
         m
         n
@@ -169,7 +169,6 @@ classdef Recorder < handle
             ylabel(h_function,'h(x): staying in the physical valid space');
             xlabel(h_function,'Iterations');
             
-            hold off
         end
         
     end

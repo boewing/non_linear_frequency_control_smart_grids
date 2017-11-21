@@ -85,10 +85,10 @@ classdef Grid
         end
         
         function upper = p_ref_upper_limit(obj,time)
-            upper = (0.5+cos(2*pi*time/400)^2)*min(obj.p_ref_upper_limit_base,0) + max(obj.p_ref_upper_limit_base,0);
+            upper = min(obj.p_ref_upper_limit_base,0) + max(obj.p_ref_upper_limit_base,0);
         end
         function lower = p_ref_lower_limit(obj,time)
-            lower = (0.5+cos(2*pi*time/400)^2)*min(obj.p_ref_lower_limit_base,0) + max(obj.p_ref_lower_limit_base,0);
+            lower = min(obj.p_ref_lower_limit_base,0) + max(obj.p_ref_lower_limit_base,0);
         end
         
         function [lb, ub] = bounds(obj, state, time)

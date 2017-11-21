@@ -22,7 +22,6 @@ classdef State < handle
             obj.q_g = zeros(mygrid.n,1);
             obj.i = zeros(2*mygrid.m,1);
             obj.f = 0;
-            
             obj = Physics.retraction(obj,mygrid);
             
 %              obj.v = [1.02, 1.015, 0.98, 1]';

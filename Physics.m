@@ -3,17 +3,38 @@ classdef Physics < handle
     %controller input and the grid properties. more specific it is able to
     %bring an infeasible state back to a feasible one by retraction.
     
+%     properties(Constant)
+%         E = diag([zeros(1,mygrid.n),...   %v
+%                 [1,zeros(1,mygrid.n-1)],...     %theta
+%                 zeros(1,mygrid.n),...           %p_g
+%                 ones(1,mygrid.n),...            %q_g
+%                 ones(1,mygrid.n),...            %p_ref
+%                 zeros(1,2*mygrid.m),...         %i
+%                 0]);                            %f
+%     end
+    
     methods(Static)
         
         %%equality constraints function h
         function h = h(mystate,mygrid)
-            u = mystate.v.*exp(1i*mystate.theta);
-            temp1 = diag(u)*conj(mygrid.Y*u);
-            temp3 = (1 + mygrid.K*mystate.f).*mystate.p_ref - mystate.p_g;
-            temp4 = abs((mygrid.C*mygrid.A-mygrid.Csh*mygrid.A_t)*u).^2 - mystate.i.^2;
-            
-            h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3; temp4];
-            %h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3];
+            if isa(mystate,'State')
+                u = mystate.v.*exp(1i*mystate.theta);
+                temp1 = diag(u)*conj(mygrid.Y*u);
+                temp3 = (1 + mygrid.K*mystate.f).*mystate.p_ref - mystate.p_g;
+                temp4 = abs((mygrid.C*mygrid.A-mygrid.Csh*mygrid.A_t)*u).^2 - mystate.i.^2;
+                
+                h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3; temp4];
+                %h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3];
+            else
+                n=mygrid.n;
+                m=mygrid.m;
+                u = mystate(1:n).*exp(1i*mystate(1+n:2*n));
+                temp1 = diag(u)*conj(mygrid.Y*u);
+                temp3 = (1 + mygrid.K*mystate(2*m+5*n+1)).*mystate(4*n+1:5*n) - mystate(2*n+1:3*n);
+                temp4 = abs((mygrid.C*mygrid.A-mygrid.Csh*mygrid.A_t)*u).^2 - mystate(5*n+1:5*n+2*m).^2;
+                
+                h=[real(temp1)-mystate(1+2*n:3*n); imag(temp1)-mystate(1+3*n:4*n); temp3; temp4];
+            end
         end
         
         %this is the h function with a split in a fixed part and a part to
@@ -82,32 +103,55 @@ classdef Physics < handle
         %sum:  3*n+2*m vars
         
         function newstate = retraction(mystate, mygrid)
-            
+            %fsolve(@(y) Physics.h(mystate, mygrid
             xx = mystate.getx;
             %                   v               theta(2:n)                   p_g
-            initial_x_var = [xx(1:mygrid.n); xx(2+mygrid.n:2*mygrid.n); xx(1+2*mygrid.n:3*mygrid.n); xx(1+5*mygrid.n:2*mygrid.m+5*mygrid.n);xx(2*mygrid.m+5*mygrid.n + 1)];
-            assert(0==norm(Physics.h(mystate,mygrid) - Physics.h_fix(mystate,mygrid, initial_x_var)));
-            new_x_var = fsolve(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-8));
+            %initial_x_var = [xx(1:mygrid.n); xx(2+mygrid.n:2*mygrid.n); xx(1+2*mygrid.n:3*mygrid.n); xx(1+5*mygrid.n:2*mygrid.m+5*mygrid.n);xx(2*mygrid.m+5*mygrid.n + 1)];
+            %assert(0==norm(Physics.h(mystate,mygrid) - Physics.h_fix(mystate,mygrid, initial_x_var)));
+            new_x_var = fsolve(@(y) Physics.h_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-10));
+            %new_x_var = fsolve(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-8));
             %new_x_var = lsqnonlin(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var, [], [], optimoptions('lsqnonlin','Display', 'off', 'FunctionTolerance',1e-8));
             
             mystate.v = new_x_var(1:mygrid.n);
-            mystate.theta = [xx(1+mygrid.n); new_x_var(mygrid.n+1:2*mygrid.n-1)];
-            mystate.p_g = new_x_var(1+2*mygrid.n-1:3*mygrid.n-1);
-            mystate.i = abs(new_x_var(1+3*mygrid.n-1:2*mygrid.m+3*mygrid.n-1));    %because for the equation h_fix the sign of h is irrelevant
-            mystate.f = new_x_var(1+2*mygrid.m+3*mygrid.n-1);
+            mystate.theta = new_x_var(mygrid.n+1:2*mygrid.n);
+            mystate.p_g = new_x_var(1+2*mygrid.n:3*mygrid.n);
+            mystate.q_g = new_x_var(1+3*mygrid.n:4*mygrid.n);
+            mystate.p_ref = new_x_var(1+4*mygrid.n:5*mygrid.n);
+            mystate.i = abs(new_x_var(1+5*mygrid.n:2*mygrid.m+5*mygrid.n));    %because for the equation h_fix the sign of h is irrelevant
+            mystate.f = new_x_var(1+2*mygrid.m+5*mygrid.n);
             
             Physics.ctrl_angle_correction(mystate);
             newstate = mystate;
             
-%             temp = Physics.h(newstate, mygrid);
-%             newstate.i = -newstate.i;
-%             assert(norm(Physics.h(newstate, mygrid) - temp) == 0);
+            %             temp = Physics.h(newstate, mygrid);
+            %             newstate.i = -newstate.i;
+            %             assert(norm(Physics.h(newstate, mygrid) - temp) == 0);
             
         end
         
         function ctrl_angle_correction(mystate)
             % correct voltage angles to lie in [-pi, pi]
             mystate.theta = mod(mystate.theta + pi/2, pi) - pi/2;
+            mystate.theta = mystate.theta - mystate.theta(1);
+        end
+        
+        function val = h_aug(mystate, mygrid, x_var)
+            assert(isa(mystate,'State'));
+            
+            %this is a selector matrix selecting the parts of the state
+            %which are fixed
+            E = diag([zeros(1,mygrid.n),...   %v
+                [1,zeros(1,mygrid.n-1)],...     %theta
+                zeros(1,mygrid.n),...           %p_g
+                ones(1,mygrid.n),...            %q_g
+                ones(1,mygrid.n),...            %p_ref
+                zeros(1,2*mygrid.m),...         %i
+                0]);                            %f
+            
+            E_short = E(logical(sum(E)'),:);
+            assert(min(sum(E_short'))==1);
+            
+            val = [Physics.h(x_var,mygrid); E_short*(mystate.getx - x_var)];
         end
         
         
