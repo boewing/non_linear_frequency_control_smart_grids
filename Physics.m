@@ -108,6 +108,8 @@ classdef Physics < handle
             %                   v               theta(2:n)                   p_g
             %initial_x_var = [xx(1:mygrid.n); xx(2+mygrid.n:2*mygrid.n); xx(1+2*mygrid.n:3*mygrid.n); xx(1+5*mygrid.n:2*mygrid.m+5*mygrid.n);xx(2*mygrid.m+5*mygrid.n + 1)];
             %assert(0==norm(Physics.h(mystate,mygrid) - Physics.h_fix(mystate,mygrid, initial_x_var)));
+            %rank_of_gradient = min(abs(eig([Physics.n_h(mystate,mygrid);mygrid.E_short])));
+            condition = norm([Physics.n_h(mystate,mygrid);mygrid.E_short])*norm(inv([Physics.n_h(mystate,mygrid);mygrid.E_short]))
             new_x_var = fsolve(@(y) Physics.h_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-10));
             %new_x_var = fsolve(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-8));
             %new_x_var = lsqnonlin(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var, [], [], optimoptions('lsqnonlin','Display', 'off', 'FunctionTolerance',1e-8));
