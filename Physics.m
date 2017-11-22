@@ -20,7 +20,7 @@ classdef Physics < handle
             if isa(mystate,'State')
                 u = mystate.v.*exp(1i*mystate.theta);
                 temp1 = diag(u)*conj(mygrid.Y*u);
-                temp3 = (1 + mygrid.K*mystate.f).*mystate.p_ref - mystate.p_g;
+                temp3 = (mygrid.K*mystate.f + mystate.p_ref) - mystate.p_g;
                 temp4 = abs(mygrid.Q*u).^2 - mystate.i.^2;
                 
                 h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3; temp4];
@@ -30,7 +30,7 @@ classdef Physics < handle
                 m=mygrid.m;
                 u = mystate(1:n).*exp(1i*mystate(1+n:2*n));
                 temp1 = u.*conj(mygrid.Y*u);
-                temp3 = (1 + mygrid.K*mystate(2*m+5*n+1)).*mystate(4*n+1:5*n) - mystate(2*n+1:3*n);
+                temp3 = mygrid.K*mystate(2*m+5*n+1) + mystate(4*n+1:5*n) - mystate(2*n+1:3*n);
                 temp4 = abs(mygrid.Q*u).^2 - mystate(5*n+1:5*n+2*m).^2;
                 
                 h=[real(temp1)-mystate(1+2*n:3*n); imag(temp1)-mystate(1+3*n:4*n); temp3; temp4];
@@ -70,7 +70,7 @@ classdef Physics < handle
             Q = mygrid.Q;
             
             line1 = [lu_block, zeros(2*mygrid.n,mygrid.n),zeros(2*mygrid.n,2*mygrid.m),zeros(2*mygrid.n,1)];
-            line2 = [zeros(mygrid.n,2*mygrid.n),-eye(mygrid.n),zeros(mygrid.n),(eye(mygrid.n)+mystate.f*diag(mygrid.K)), zeros(mygrid.n,2*mygrid.m),diag(mygrid.K)*mystate.p_ref];
+            line2 = [zeros(mygrid.n,2*mygrid.n), -eye(mygrid.n), zeros(mygrid.n), eye(mygrid.n), zeros(mygrid.n,2*mygrid.m), mygrid.K];
             line3 = [2*real(diag(conj(Q*u))*Q*diag(exp(1j*A0))), 2*imag(diag(conj(Q*u))*Q*diag(u)), zeros(2*mygrid.m,3*mygrid.n), -2*diag(mystate.i), zeros(2*mygrid.m,1)];
             
             n_h=[line1; line2; line3];
@@ -109,7 +109,7 @@ classdef Physics < handle
             %initial_x_var = [xx(1:mygrid.n); xx(2+mygrid.n:2*mygrid.n); xx(1+2*mygrid.n:3*mygrid.n); xx(1+5*mygrid.n:2*mygrid.m+5*mygrid.n);xx(2*mygrid.m+5*mygrid.n + 1)];
             %assert(0==norm(Physics.h(mystate,mygrid) - Physics.h_fix(mystate,mygrid, initial_x_var)));
             %rank_of_gradient = min(abs(eig([Physics.n_h(mystate,mygrid);mygrid.E_short])));
-            condition = norm([Physics.n_h(mystate,mygrid);mygrid.E_short])*norm(inv([Physics.n_h(mystate,mygrid);mygrid.E_short]))
+            %condition = norm([Physics.n_h(mystate,mygrid);mygrid.E_short])*norm(inv([Physics.n_h(mystate,mygrid);mygrid.E_short]))
             new_x_var = fsolve(@(y) Physics.h_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-10));
             %new_x_var = fsolve(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-8));
             %new_x_var = lsqnonlin(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var, [], [], optimoptions('lsqnonlin','Display', 'off', 'FunctionTolerance',1e-8));
