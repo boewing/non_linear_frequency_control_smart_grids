@@ -6,6 +6,7 @@ classdef Grid
         A_t
         C
         Csh
+        Q
         Y
         n
         m
@@ -23,6 +24,7 @@ classdef Grid
         penalty_factor_f
         cost_vector_p_g
         cost_vector_q_g
+        E_short
     end
     
     methods
@@ -51,6 +53,8 @@ classdef Grid
             Csh_half= (1/1^2)*(1/base_MVA)*diag(Gsh + 1i*Bsh); % admittance matrix in p.u.
             obj.Csh = [Csh_half,zeros(length(Csh_half));zeros(length(Csh_half)),Csh_half];
             
+            obj.Q = obj.C*obj.A-obj.Csh*obj.A_t;
+            
             %limits
             
             obj.i_limit = 1.06*ones(2*obj.m,1); % line current limit in p.u.
@@ -71,6 +75,18 @@ classdef Grid
             obj.cost_vector_p_g = [  2 1.1   1   1]';
             obj.cost_vector_q_g = [0.1 0.1 0.1 0.2]';
             
+            %this is a selector matrix selecting the parts of the state
+            %which are fixed
+            E = diag([zeros(1,obj.n),...   %v
+                [1,zeros(1,obj.n-1)],...     %theta
+                zeros(1,obj.n),...           %p_g
+                ones(1,obj.n),...            %q_g
+                ones(1,obj.n),...            %p_ref
+                zeros(1,2*obj.m),...         %i
+                0]);                            %f
+            
+            obj.E_short = E(logical(sum(E)'),:);
+            assert(min(sum(obj.E_short'))==1);            
         end
         
         %marginal cost of generation

@@ -21,7 +21,7 @@ classdef Physics < handle
                 u = mystate.v.*exp(1i*mystate.theta);
                 temp1 = diag(u)*conj(mygrid.Y*u);
                 temp3 = (1 + mygrid.K*mystate.f).*mystate.p_ref - mystate.p_g;
-                temp4 = abs((mygrid.C*mygrid.A-mygrid.Csh*mygrid.A_t)*u).^2 - mystate.i.^2;
+                temp4 = abs(mygrid.Q*u).^2 - mystate.i.^2;
                 
                 h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3; temp4];
                 %h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3];
@@ -29,9 +29,9 @@ classdef Physics < handle
                 n=mygrid.n;
                 m=mygrid.m;
                 u = mystate(1:n).*exp(1i*mystate(1+n:2*n));
-                temp1 = diag(u)*conj(mygrid.Y*u);
+                temp1 = u.*conj(mygrid.Y*u);
                 temp3 = (1 + mygrid.K*mystate(2*m+5*n+1)).*mystate(4*n+1:5*n) - mystate(2*n+1:3*n);
-                temp4 = abs((mygrid.C*mygrid.A-mygrid.Csh*mygrid.A_t)*u).^2 - mystate(5*n+1:5*n+2*m).^2;
+                temp4 = abs(mygrid.Q*u).^2 - mystate(5*n+1:5*n+2*m).^2;
                 
                 h=[real(temp1)-mystate(1+2*n:3*n); imag(temp1)-mystate(1+3*n:4*n); temp3; temp4];
             end
@@ -57,17 +57,17 @@ classdef Physics < handle
         function n_h = n_h(mystate,mygrid) % has a reduced form: contains only the equations for p_g, q_g and p_ref
             V0 = mystate.v;
             A0 = mystate.theta;
+            u = V0.*exp(1j*A0);
             
-            J0 = mygrid.Y * (V0.*exp(1j*A0));
-            UU = bracket(diag(V0.*exp(1j*A0)));
+            J0 = mygrid.Y * (u);
+            UU = bracket(diag(u));
             JJ = bracket(diag(conj(J0)));
             NN = Nmatrix(2*mygrid.n);
             YY = bracket(mygrid.Y);
             PP = Rmatrix(mystate.v, mystate.theta);
             lu_block = [(JJ + UU*NN*YY)*PP, -eye(2*mygrid.n)];
             
-            Q = mygrid.C*mygrid.A - mygrid.Csh*mygrid.A_t;
-            u = V0.*exp(1j*A0);
+            Q = mygrid.Q;
             
             line1 = [lu_block, zeros(2*mygrid.n,mygrid.n),zeros(2*mygrid.n,2*mygrid.m),zeros(2*mygrid.n,1)];
             line2 = [zeros(mygrid.n,2*mygrid.n),-eye(mygrid.n),zeros(mygrid.n),(eye(mygrid.n)+mystate.f*diag(mygrid.K)), zeros(mygrid.n,2*mygrid.m),diag(mygrid.K)*mystate.p_ref];
@@ -138,20 +138,7 @@ classdef Physics < handle
         function val = h_aug(mystate, mygrid, x_var)
             assert(isa(mystate,'State'));
             
-            %this is a selector matrix selecting the parts of the state
-            %which are fixed
-            E = diag([zeros(1,mygrid.n),...   %v
-                [1,zeros(1,mygrid.n-1)],...     %theta
-                zeros(1,mygrid.n),...           %p_g
-                ones(1,mygrid.n),...            %q_g
-                ones(1,mygrid.n),...            %p_ref
-                zeros(1,2*mygrid.m),...         %i
-                0]);                            %f
-            
-            E_short = E(logical(sum(E)'),:);
-            assert(min(sum(E_short'))==1);
-            
-            val = [Physics.h(x_var,mygrid); E_short*(mystate.getx - x_var)];
+            val = [Physics.h(x_var,mygrid); mygrid.E_short*(mystate.getx - x_var)];
         end
         
         
