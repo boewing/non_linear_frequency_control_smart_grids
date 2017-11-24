@@ -25,6 +25,7 @@ classdef Grid
         cost_vector_p_g
         cost_vector_q_g
         E_short
+        is_generator
     end
     
     methods
@@ -65,6 +66,7 @@ classdef Grid
             
             obj.p_ref_upper_limit_base = [ 1.0;  0.6; -0.2; -0.36];
             obj.p_ref_lower_limit_base = [   0;    0; -0.3; -0.36];
+            obj.is_generator = obj.p_ref_upper_limit_base > 0;
             obj.penalty_factor_S =  2;
             obj.S_limit =           [ 1.0;  1.0;  Inf;   Inf];
             
@@ -117,7 +119,13 @@ classdef Grid
             theta_min_rel = [0; -Inf*ones(obj.n-1,1)];
             
             p_g_max_rel = Inf*ones(obj.n,1);
-            p_g_min_rel = -Inf*ones(obj.n,1);
+            p_g_min_rel = -state.p_g;
+            for ii=1:obj.n
+                if obj.is_generator(ii) == false
+                p_g_min_rel(ii) = -Inf;
+                end
+            end
+            %p_g_min_rel = -state.p_g - realmax*(~obj.is_generator);
             
             q_g_max_rel = Inf*ones(obj.n,1);
             q_g_min_rel = -Inf*ones(obj.n,1);
