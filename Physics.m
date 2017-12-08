@@ -3,16 +3,6 @@ classdef Physics < handle
     %controller input and the grid properties. more specific it is able to
     %bring an infeasible state back to a feasible one by retraction.
     
-%     properties(Constant)
-%         E = diag([zeros(1,mygrid.n),...   %v
-%                 [1,zeros(1,mygrid.n-1)],...     %theta
-%                 zeros(1,mygrid.n),...           %p_g
-%                 ones(1,mygrid.n),...            %q_g
-%                 ones(1,mygrid.n),...            %p_ref
-%                 zeros(1,2*mygrid.m),...         %i
-%                 0]);                            %f
-%     end
-    
     methods(Static)
         
         %%equality constraints function h
@@ -110,17 +100,17 @@ classdef Physics < handle
             %assert(0==norm(Physics.h(mystate,mygrid) - Physics.h_fix(mystate,mygrid, initial_x_var)));
             %rank_of_gradient = min(abs(eig([Physics.n_h(mystate,mygrid);mygrid.E_short])));
             %condition = norm([Physics.n_h(mystate,mygrid);mygrid.E_short])*norm(inv([Physics.n_h(mystate,mygrid);mygrid.E_short]))
-            new_x_var = fsolve(@(y) Physics.h_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-10));
+            new_x_var = fsolve(@(y) Physics.h_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Algorithm','levenberg-marquardt','Display', 'off', 'FunctionTolerance',1e-10));
             %new_x_var = fsolve(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-8));
             %new_x_var = lsqnonlin(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var, [], [], optimoptions('lsqnonlin','Display', 'off', 'FunctionTolerance',1e-8));
             
-            mystate.v = new_x_var(1:mygrid.n);
-            mystate.theta = new_x_var(mygrid.n+1:2*mygrid.n);
-            mystate.p_g = new_x_var(1+2*mygrid.n:3*mygrid.n);
-            mystate.q_g = new_x_var(1+3*mygrid.n:4*mygrid.n);
-            mystate.p_ref = new_x_var(1+4*mygrid.n:5*mygrid.n);
-            mystate.i = abs(new_x_var(1+5*mygrid.n:2*mygrid.m+5*mygrid.n));    %because for the equation h_fix the sign of h is irrelevant
-            mystate.f = new_x_var(1+2*mygrid.m+5*mygrid.n);
+            mystate.v      = new_x_var(1:mygrid.n);
+            mystate.theta  = new_x_var(1+mygrid.n:2*mygrid.n);
+            mystate.p_g    = new_x_var(1+2*mygrid.n:3*mygrid.n);
+            mystate.q_g    = new_x_var(1+3*mygrid.n:4*mygrid.n);
+            mystate.p_ref  = new_x_var(1+4*mygrid.n:5*mygrid.n);
+            mystate.i      = abs(new_x_var(1+5*mygrid.n:2*mygrid.m+5*mygrid.n));    %because for the equation h_fix the sign of h is irrelevant
+            mystate.f      = new_x_var(1+2*mygrid.m+5*mygrid.n);
             
             Physics.ctrl_angle_correction(mystate);
             newstate = mystate;
@@ -140,7 +130,7 @@ classdef Physics < handle
         function val = h_aug(mystate, mygrid, x_var)
             assert(isa(mystate,'State'));
             
-            val = [Physics.h(x_var,mygrid); mygrid.E_short*(mystate.getx - x_var)];
+            val = [Physics.h(x_var,mygrid); mygrid.E*(mystate.getx - x_var)];
         end
         
         

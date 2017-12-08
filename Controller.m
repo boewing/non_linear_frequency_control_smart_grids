@@ -3,8 +3,8 @@ classdef Controller < handle
         penalty_factor_i = 10
         penalty_factor_v = 5
         penalty_factor_S = 2
-        penalty_factor_f = 3
-        step_size = 0.15
+        penalty_factor_f = 200
+        step_size = 0.5
     end
     
     methods(Static)
@@ -31,7 +31,8 @@ classdef Controller < handle
             Aeq = Physics.n_h(x,mygrid);
             beq = zeros(size(Aeq,1),1);
             [lb, ub] = mygrid.bounds(x,k);
-            d = quadprog(H,ff,[],[],Aeq,beq,lb,ub,[],optimoptions('quadprog','Display','off'));  
+            d = quadprog(H,ff,[],[],Aeq,beq,lb,ub,[],optimoptions('quadprog', 'Display', 'off'));  
+            assert(length(d) == 5*mygrid.n + 2*mygrid.m + 1);
             %     assert(max(Aeq*d) < 1e-10, 'next step is not in the tangent plane');
         end
         

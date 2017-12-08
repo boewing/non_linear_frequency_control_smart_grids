@@ -24,7 +24,7 @@ classdef Grid
         penalty_factor_f
         cost_vector_p_g
         cost_vector_q_g
-        E_short
+        E
         is_generator
     end
     
@@ -47,7 +47,7 @@ classdef Grid
             obj.A = A;
             obj.A_t = A_t;
             
-            obj.K=[-1.0 -1.0 0 0.01]'; %stiffness of the primary frequency controller at each generator or load in p.u./Hz
+            obj.K=[-10.0 -10.0 0 0.01]'; %stiffness of the primary frequency controller at each generator or load in p.u./Hz
             
             Gsh = [0 0 0 0 0]; %shunt conductance in MW at V = 1 p.u.
             Bsh = [0 0 0 19 0]; % shunt susceptance in MVar at V = 1 p.u.
@@ -59,36 +59,33 @@ classdef Grid
             %limits
             
             obj.i_limit = 1.06*ones(2*obj.m,1); % line current limit in p.u.
-            obj.penalty_factor_i = 10;
             
             obj.v_limit = 1.06*ones(obj.n,1); %voltage limits at each node in p.u.
-            obj.penalty_factor_v = 5;
             
-            obj.p_ref_upper_limit_base = [ 1.0;  0.6; -0.2; -0.36];
-            obj.p_ref_lower_limit_base = [   0;    0; -0.3; -0.36];
-            obj.is_generator = obj.p_ref_upper_limit_base > 0;
-            obj.penalty_factor_S =  2;
+            import_struct = load('time_behaviour\p_ref_limits_ramp.mat'); 
+            obj.p_ref_upper_limit_base = import_struct.p_ref_upper_limit_base; 
+            obj.p_ref_lower_limit_base = import_struct.p_ref_lower_limit_base; 
+            obj.is_generator = obj.p_ref_upper_limit_base > 0; 
             obj.S_limit =           [ 1.0;  1.0;  Inf;   Inf];
             
             obj.f_upper_limit = 0.0; % in Hz
             obj.f_lower_limit = -0.0; % in Hz
-            obj.penalty_factor_f = 20.5;
             
-            obj.cost_vector_p_g = [  2 1.1  0   0]';
+            obj.cost_vector_p_g = [1.2 1.1  0   0]';
             obj.cost_vector_q_g = [0.3 0.3  0   0]';
             
             %this is a selector matrix selecting the parts of the state
             %which are fixed
-            E = diag([zeros(1,obj.n),...   %v
+            E_long = diag([zeros(1,obj.n),...   %v
                 [1,zeros(1,obj.n-1)],...     %theta
                 zeros(1,obj.n),...           %p_g
                 ones(1,obj.n),...            %q_g
                 ones(1,obj.n),...            %p_ref
                 zeros(1,2*obj.m),...         %i
-                0]);                            %f
+                0]);                         %f
             
-            obj.E_short = E(logical(sum(E)'),:);
-            assert(min(sum(obj.E_short'))==1);            
+            obj.E = E_long(logical(sum(E_long)'),:);
+            assert(min(sum(obj.E'))==1);  
         end
         
         %marginal cost of generation
@@ -103,10 +100,10 @@ classdef Grid
         end
         
         function upper = p_ref_upper_limit(obj,time)
-            upper = min(obj.p_ref_upper_limit_base,0) + max(obj.p_ref_upper_limit_base,0);
+            upper = obj.p_ref_upper_limit_base(:,time);
         end
         function lower = p_ref_lower_limit(obj,time)
-            lower = min(obj.p_ref_lower_limit_base,0) + max(obj.p_ref_lower_limit_base,0);
+            lower = obj.p_ref_lower_limit_base(:,time);
         end
         
         function [lb, ub] = bounds(obj, state, time)
@@ -144,7 +141,7 @@ classdef Grid
             f_min_rel = -Inf;
             
             ub = [v_max_rel; theta_max_rel; p_g_max_rel; q_g_max_rel; p_ref_max_rel; i_max_rel; f_max_rel];
-            lb = [v_min_rel; theta_min_rel; p_g_min_rel; q_g_min_rel; p_ref_min_rel; i_min_rel; f_min_rel];
+            lb = min(ub,[v_min_rel; theta_min_rel; p_g_min_rel; q_g_min_rel; p_ref_min_rel; i_min_rel; f_min_rel]); %ensures that ub >= lb. This is necessary because sometimes lb(i) == ub(i) but numerically a small difference causing a collapsing interval can prevent the optimisation from working.
             
         end
 

@@ -130,6 +130,8 @@ classdef Recorder < handle
             
             hold(p_g,'on')
             plot(p_g, obj.x_save(2*n+1:3*n,obj.start_disp:obj.iteration)');
+            p_g.ColorOrderIndex = 1;
+            plot(p_g, obj.x_save(4*n+1:5*n,obj.start_disp:obj.iteration)','--');
             for k=(2*n+1):(3*n)
                 x_values = 1:(obj.iteration - (obj.start_disp - 1));                            %shift the index according to the
                 x_values = x_values(obj.p_g_limit_reached(k,obj.start_disp:obj.iteration));       %take out all the points where the limit was not reached
@@ -168,6 +170,10 @@ classdef Recorder < handle
             plot(h_function, obj.h_function_save(:,obj.start_disp:obj.iteration)');
             ylabel(h_function,'h(x): staying in the physical valid space');
             xlabel(h_function,'Iterations');
+            
+            %figure(1)
+            
+            %plot(sum(obj.x_save(3*n+1:4*n,obj.start_disp:obj.iteration)))
             
         end
         
