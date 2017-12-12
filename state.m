@@ -5,7 +5,8 @@ classdef State < handle
         p_g
         q_g
         p_ref
-        i
+        i_re
+        i_im
         f
     end
     
@@ -20,26 +21,28 @@ classdef State < handle
             assert(abs(sum(obj.p_ref)) <= 1e-10);
             obj.p_g = obj.p_ref;
             obj.q_g = zeros(mygrid.n,1);
-            obj.i = zeros(2*mygrid.m,1);
+            obj.i_re = zeros(2*mygrid.m,1);
+            obj.i_im = zeros(2*mygrid.m,1);
             obj.f = 0;
             obj = Physics.retraction(obj,mygrid);
             
         end
         
         function x = getx(obj)
-            x=[obj.v; obj.theta; obj.p_g; obj.q_g; obj.p_ref; obj.i; obj.f];
+            x=[obj.v; obj.theta; obj.p_g; obj.q_g; obj.p_ref; obj.i_re; obj.i_im; obj.f];
         end
         
         function setx(obj, x)
             n = length(obj.v);
-            m = length(obj.i)/2;
+            m = length(obj.i_re)/2;
             obj.v = x(1:n);
             obj.theta = x(1+n:2*n);
             obj.p_g = x(1+2*n:3*n);
             obj.q_g = x(1+3*n:4*n);
             obj.p_ref = x(1+4*n:5*n);
-            obj.i = x(1+5*n:5*n+2*m);
-            obj.f = x(1+5*n+2*m);
+            obj.i_re = x(1+5*n:5*n+2*m);
+            obj.i_im = x(1+5*n+2*m:5*n+4*m);
+            obj.f = x(1+5*n+4*m);
         end
     end
 end

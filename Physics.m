@@ -11,9 +11,9 @@ classdef Physics < handle
                 u = mystate.v.*exp(1i*mystate.theta);
                 temp1 = diag(u)*conj(mygrid.Y*u);
                 temp3 = (mygrid.K*mystate.f + mystate.p_ref) - mystate.p_g;
-                temp4 = abs(mygrid.Q*u).^2 - mystate.i.^2;
+                temp4 = mygrid.Q*u;
                 
-                h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3; temp4];
+                h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3; real(temp4) - mystate.i_re; imag(temp4) - mystate.i_im];
                 %h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3];
             else
                 n=mygrid.n;
@@ -21,15 +21,16 @@ classdef Physics < handle
                 u = mystate(1:n).*exp(1i*mystate(1+n:2*n));
                 temp1 = u.*conj(mygrid.Y*u);
                 temp3 = mygrid.K*mystate(2*m+5*n+1) + mystate(4*n+1:5*n) - mystate(2*n+1:3*n);
-                temp4 = abs(mygrid.Q*u).^2 - mystate(5*n+1:5*n+2*m).^2;
+                temp4 = mygrid.Q*u - mystate(5*n+1:5*n+2*m).^2;
                 
-                h=[real(temp1)-mystate(1+2*n:3*n); imag(temp1)-mystate(1+3*n:4*n); temp3; temp4];
+                h=[real(temp1)-mystate(1+2*n:3*n); imag(temp1)-mystate(1+3*n:4*n); temp3; real(temp4) - mystate(5*n+1:5*n+2*m); imag(temp4) - mystate(5*n+2*m+1:5*n+4*m)];
             end
         end
         
         %this is the h function with a split in a fixed part and a part to
         %change variables
         %fix: p_ref ; variable: v, theta(2:n), p_g, i, and f
+        %not used anymore
         function var = h_fix(mystate, mygrid, x_var)
             n=mygrid.n;
             m=mygrid.m;
@@ -59,11 +60,12 @@ classdef Physics < handle
             
             Q = mygrid.Q;
             
-            line1 = [lu_block, zeros(2*mygrid.n,mygrid.n),zeros(2*mygrid.n,2*mygrid.m),zeros(2*mygrid.n,1)];
-            line2 = [zeros(mygrid.n,2*mygrid.n), -eye(mygrid.n), zeros(mygrid.n), eye(mygrid.n), zeros(mygrid.n,2*mygrid.m), mygrid.K];
-            line3 = [2*real(diag(conj(Q*u))*Q*diag(exp(1j*A0))), 2*imag(diag(conj(Q*u))*Q*diag(u)), zeros(2*mygrid.m,3*mygrid.n), -2*diag(mystate.i), zeros(2*mygrid.m,1)];
+            line1 = [lu_block, zeros(2*mygrid.n,mygrid.n),zeros(2*mygrid.n,4*mygrid.m),zeros(2*mygrid.n,1)];
+            line2 = [zeros(mygrid.n,2*mygrid.n), -eye(mygrid.n), zeros(mygrid.n), eye(mygrid.n), zeros(mygrid.n,4*mygrid.m), mygrid.K];
+            line3 = [real(Q*diag(exp(1j*A0))), real(1j*Q*diag(u)), zeros(2*mygrid.m,3*mygrid.n), -eye(2*mygrid.m), zeros(2*mygrid.m), zeros(2*mygrid.m,1)];
+            line4 = [imag(Q*diag(exp(1j*A0))), imag(1j*Q*diag(u)), zeros(2*mygrid.m,3*mygrid.n), zeros(2*mygrid.m), -eye(2*mygrid.m), zeros(2*mygrid.m,1)];
             
-            n_h=[line1; line2; line3];
+            n_h=[line1; line2; line3; line4];
             
             
             function R = Rmatrix(V,TH)
@@ -109,8 +111,9 @@ classdef Physics < handle
             mystate.p_g    = new_x_var(1+2*mygrid.n:3*mygrid.n);
             mystate.q_g    = new_x_var(1+3*mygrid.n:4*mygrid.n);
             mystate.p_ref  = new_x_var(1+4*mygrid.n:5*mygrid.n);
-            mystate.i      = abs(new_x_var(1+5*mygrid.n:2*mygrid.m+5*mygrid.n));    %because for the equation h_fix the sign of h is irrelevant
-            mystate.f      = new_x_var(1+2*mygrid.m+5*mygrid.n);
+            mystate.i_re   = new_x_var(1+5*mygrid.n:2*mygrid.m+5*mygrid.n);    
+            mystate.i_im   = new_x_var(1+2*mygrid.m+5*mygrid.n:4*mygrid.m+5*mygrid.n);
+            mystate.f      = new_x_var(1+4*mygrid.m+5*mygrid.n);
             
             Physics.ctrl_angle_correction(mystate);
             newstate = mystate;

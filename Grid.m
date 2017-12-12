@@ -49,8 +49,8 @@ classdef Grid
             
             obj.K=[-10.0 -10.0 0 0.01]'; %stiffness of the primary frequency controller at each generator or load in p.u./Hz
             
-            Gsh = [0 0 0 0 0]; %shunt conductance in MW at V = 1 p.u.
-            Bsh = [0 0 0 19 0]; % shunt susceptance in MVar at V = 1 p.u.
+            Gsh = [0 0 0 0 0]; %shunt conductance in MW at V = 1 p.u 
+            Bsh = [0 0 0 19 0]; % shunt susceptance in MVar at V = 1 p.u. 
             Csh_half= (1/1^2)*(1/base_MVA)*diag(Gsh + 1i*Bsh); % admittance matrix in p.u.
             obj.Csh = [Csh_half,zeros(length(Csh_half));zeros(length(Csh_half)),Csh_half];
             
@@ -81,7 +81,8 @@ classdef Grid
                 zeros(1,obj.n),...           %p_g
                 ones(1,obj.n),...            %q_g
                 ones(1,obj.n),...            %p_ref
-                zeros(1,2*obj.m),...         %i
+                zeros(1,2*obj.m),...         %i_re
+                zeros(1,2*obj.m),...         %i_im
                 0]);                         %f
             
             obj.E = E_long(logical(sum(E_long)'),:);
@@ -96,7 +97,7 @@ classdef Grid
         
         function cD = cost_of_generationD(obj, mystate)
             
-            cD = [zeros(1, 2*obj.n), obj.cost_vector_p_g', 2*(obj.cost_vector_q_g.*mystate.q_g)', zeros(1,obj.n), zeros(1,2*obj.m), 0];
+            cD = [zeros(1, 2*obj.n), obj.cost_vector_p_g', 2*(obj.cost_vector_q_g.*mystate.q_g)', zeros(1,obj.n), zeros(1,4*obj.m), 0];
         end
         
         function upper = p_ref_upper_limit(obj,time)
@@ -133,15 +134,17 @@ classdef Grid
             %     p_ref_max_rel = Inf*abs((obj.p_ref_upper_limit - state.p_ref));
             %     p_ref_min_rel = -Inf*abs((obj.p_ref_lower_limit - state.p_ref));
             
-            i_max_rel = Inf*ones(2*obj.m,1);
-            i_min_rel = - state.i;
-            %    i_min_rel = - Inf*ones(2*obj.m,1);
+            i_re_max_rel = Inf*ones(2*obj.m,1);
+            i_re_min_rel = -Inf*ones(2*obj.m,1);
+            
+            i_im_max_rel = Inf*ones(2*obj.m,1);
+            i_im_min_rel = -Inf*ones(2*obj.m,1);
             
             f_max_rel = Inf;
             f_min_rel = -Inf;
             
-            ub = [v_max_rel; theta_max_rel; p_g_max_rel; q_g_max_rel; p_ref_max_rel; i_max_rel; f_max_rel];
-            lb = min(ub,[v_min_rel; theta_min_rel; p_g_min_rel; q_g_min_rel; p_ref_min_rel; i_min_rel; f_min_rel]); %ensures that ub >= lb. This is necessary because sometimes lb(i) == ub(i) but numerically a small difference causing a collapsing interval can prevent the optimisation from working.
+            ub = [v_max_rel; theta_max_rel; p_g_max_rel; q_g_max_rel; p_ref_max_rel; i_re_max_rel; i_im_max_rel; f_max_rel];
+            lb = min(ub,[v_min_rel; theta_min_rel; p_g_min_rel; q_g_min_rel; p_ref_min_rel; i_re_min_rel; i_im_min_rel; f_min_rel]); %ensures that ub >= lb. This is necessary because sometimes lb(i) == ub(i) but numerically a small difference causing a collapsing interval can prevent the optimisation from working.
             
         end
 

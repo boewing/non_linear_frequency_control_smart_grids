@@ -22,13 +22,13 @@ classdef Recorder < handle
     methods
         function obj = Recorder(mystate,f_function,h_function, iterations)
             x = mystate.getx();
-            obj.m = length(mystate.i)/2;
+            obj.m = length(mystate.i_re)/2;
             obj.n = length(mystate.v);
             obj.x_save = [x,zeros(length(x),iterations)];
             obj.f_function_save = [f_function,zeros(1,iterations)];
             obj.h_function_save = [h_function,zeros(1,iterations)];
             assert(obj.transient_length >= 1);
-            assert(5*obj.n + 2*obj.m + 1 == length(x));
+            assert(5*obj.n + 4*obj.m + 1 == length(x));
             
             obj.v_limit_reached = false(length(x),iterations);
             obj.i_limit_reached = false(length(x),iterations);
@@ -110,14 +110,14 @@ classdef Recorder < handle
                 y_values = y_values(obj.i_limit_reached(k,obj.start_disp:obj.iteration));      %take out all the points where the limit was not reached
                 plot(i,x_values,y_values,'xr','LineWidth',2);
             end
-            ylabel(i,'i: Current amplitude [p.u.]');
+            ylabel(i,'i_re: Current real part [p.u.]');
             xlabel(i,'Iterations');
             legend(i,obj.line_legend);
             hold(i,'off')
             
             hold(f,'on')
             plot(f, obj.x_save(end,obj.start_disp:obj.iteration)');
-            for k=(5*n+2*m+1):(5*n+2*m+1)
+            for k=(5*n+4*m+1):(5*n+4*m+1)
                 x_values = 1:(obj.iteration - (obj.start_disp - 1));                            %shift the index according to the
                 x_values = x_values(obj.f_limit_reached(k,obj.start_disp:obj.iteration));       %take out all the points where the limit was not reached
                 y_values = obj.x_save(k,obj.start_disp:obj.iteration);                          %trim the voltage values down to the desired length

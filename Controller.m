@@ -26,13 +26,13 @@ classdef Controller < handle
         end
         
         function d = getStep(x, mygrid, k)
-            H=eye(5*mygrid.n + 2*mygrid.m + 1);
+            H=eye(5*mygrid.n + 4*mygrid.m + 1);
             ff = Controller.step_size*Controller.n_Jt(x,mygrid);
             Aeq = Physics.n_h(x,mygrid);
             beq = zeros(size(Aeq,1),1);
             [lb, ub] = mygrid.bounds(x,k);
             d = quadprog(H,ff,[],[],Aeq,beq,lb,ub,[],optimoptions('quadprog', 'Display', 'off'));  
-            assert(length(d) == 5*mygrid.n + 2*mygrid.m + 1);
+            assert(length(d) == 5*mygrid.n + 4*mygrid.m + 1);
             %     assert(max(Aeq*d) < 1e-10, 'next step is not in the tangent plane');
         end
         
@@ -55,7 +55,7 @@ classdef Controller < handle
         end
         
         function val = getPenaltyS(state, mygrid)
-            val = Controller.penalty_factor_S*sum(max(state.p_g.^2 + state.q_g.^2 - mygrid.S_limit.^2,0));
+            val = Controller.penalty_factor_S*sum(max(state.p_g.^2 + state.q_g.^2 - mygrid.S_limit.^2,0));  %problem because the scheitelpunkt of the parabel is not at the limit point
         end
         
         function val = getPenaltySD(state, mygrid)
@@ -64,16 +64,19 @@ classdef Controller < handle
                 disp( 'S limit reached for at least one generator');
             end
             pq_D = [2*(1-within_limits').*state.p_g', 2*(1-within_limits').*state.q_g'];
-            val = Controller.penalty_factor_S*[zeros(1,2*mygrid.n), pq_D, zeros(1,mygrid.n + 2*mygrid.m + 1)];
+            val = Controller.penalty_factor_S*[zeros(1,2*mygrid.n), pq_D, zeros(1,mygrid.n + 4*mygrid.m + 1)];
         end
         
         function val = getPenaltyI(mystate, mygrid)
             
-            val = Controller.penalty_factor_i*sum(max(mystate.i - mygrid.i_limit, 0).^2);
+            val = Controller.penalty_factor_i*sum(max(sqrt(mystate.i_re.^2 + mystate.i_im.^2) - mygrid.i_limit, 0).^2);
         end
         
         function val = getPenaltyID(mystate, mygrid)
-            val = Controller.penalty_factor_i*[zeros(1,5*mygrid.n), 2*max(mystate.i - mygrid.i_limit, 0)', 0];
+            within_limits = (mystate.i_re.^2 + mystate.i_im.^2 <= mygrid.i_limit);
+            
+            i_D = [2*(1-within_limits').*(2*(1 - mygrid.i_limit./sqrt(mystate.i_re.^2 + mystate.i_im.^2)).*mystate.i_re)', 2*(1-within_limits').*(2*(1 - mygrid.i_limit./sqrt(mystate.i_re.^2 + mystate.i_im.^2)).*mystate.i_im)'];
+            val = Controller.penalty_factor_i*[zeros(1,5*mygrid.n), i_D, 0];
         end
         
         function val = getPenaltyV(mystate,mygrid)
@@ -81,7 +84,7 @@ classdef Controller < handle
         end
         
         function val = getPenaltyVD(mystate,mygrid)
-            val = Controller.penalty_factor_v*[2*max(mystate.v - mygrid.v_limit,0)',zeros(1,4*mygrid.n+2*mygrid.m+1)];
+            val = Controller.penalty_factor_v*[2*max(mystate.v - mygrid.v_limit,0)',zeros(1,4*mygrid.n+4*mygrid.m+1)];
         end
         
         function val = getPenaltyF(mystate,mygrid)
@@ -89,7 +92,7 @@ classdef Controller < handle
         end
         
         function val = getPenaltyFD(mystate,mygrid)
-            val = Controller.penalty_factor_f*[zeros(1,5*mygrid.n + 2*mygrid.m), 2*(max(mystate.f - mygrid.f_upper_limit,0) + (-1)*max(-mystate.f + mygrid.f_lower_limit,0))];
+            val = Controller.penalty_factor_f*[zeros(1,5*mygrid.n + 4*mygrid.m), 2*(max(mystate.f - mygrid.f_upper_limit,0) + (-1)*max(-mystate.f + mygrid.f_lower_limit,0))];
         end
         
     end
