@@ -20,10 +20,31 @@ classdef Physics < handle
                 m=mygrid.m;
                 u = mystate(1:n).*exp(1i*mystate(1+n:2*n));
                 temp1 = u.*conj(mygrid.Y*u);
-                temp3 = mygrid.K*mystate(2*m+5*n+1) + mystate(4*n+1:5*n) - mystate(2*n+1:3*n);
-                temp4 = mygrid.Q*u - mystate(5*n+1:5*n+2*m).^2;
+                temp3 = mygrid.K*mystate(4*m+5*n+1) + mystate(4*n+1:5*n) - mystate(2*n+1:3*n);
+                temp4 = mygrid.Q*u;
                 
                 h=[real(temp1)-mystate(1+2*n:3*n); imag(temp1)-mystate(1+3*n:4*n); temp3; real(temp4) - mystate(5*n+1:5*n+2*m); imag(temp4) - mystate(5*n+2*m+1:5*n+4*m)];
+            end
+        end
+        
+        %%equality constraints function h without the currents. they can be
+        %%computed straight forward
+        function h = h_small(mystate,mygrid)
+            if isa(mystate,'State')
+                u = mystate.v.*exp(1i*mystate.theta);
+                temp1 = diag(u)*conj(mygrid.Y*u);
+                temp3 = (mygrid.K*mystate.f + mystate.p_ref) - mystate.p_g;
+                
+                h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3];
+                %h=[real(temp1)-mystate.p_g; imag(temp1)-mystate.q_g; temp3];
+            else
+                n=mygrid.n;
+                m=mygrid.m;
+                u = mystate(1:n).*exp(1i*mystate(1+n:2*n));
+                temp1 = u.*conj(mygrid.Y*u);
+                temp3 = mygrid.K*mystate(4*m+5*n+1) + mystate(4*n+1:5*n) - mystate(2*n+1:3*n);
+                
+                h=[real(temp1)-mystate(1+2*n:3*n); imag(temp1)-mystate(1+3*n:4*n); temp3];
             end
         end
         
@@ -130,9 +151,9 @@ classdef Physics < handle
         function val = h_small_aug(mystate, mygrid, x_var)
             assert(isa(mystate,'State'));
             
-            h = Physics.h(x_var,mygrid);
+            h_small = Physics.h_small(x_var,mygrid);
             
-            val = [h(1:3*mygrid.n); mygrid.E*(mystate.getx - x_var)];
+            val = [h_small; mygrid.E*(mystate.getx - x_var)];
         end
     end
 end

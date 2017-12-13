@@ -31,7 +31,7 @@ classdef Recorder < handle
             assert(5*obj.n + 4*obj.m + 1 == length(x));
             
             obj.v_limit_reached = false(length(x),iterations);
-            obj.i_limit_reached = false(length(x),iterations);
+            obj.i_limit_reached = false(length(mystate.i_re),iterations);
             obj.f_limit_reached = false(length(x),iterations);
             obj.p_g_limit_reached = false(length(x),iterations);
             obj.q_g_limit_reached = false(length(x),iterations);
@@ -101,13 +101,13 @@ classdef Recorder < handle
             legend(v,obj.node_legend);
             hold(v,'off')
             
-            i_mag = sqrt(obj.x_save(5*n+1:5*n+2*m,obj.start_disp:obj.iteration)'.^2 + obj.x_save(5*n+2*m+1:5*n+4*m,obj.start_disp:obj.iteration)'.^2);
+            i_mag = sqrt(obj.x_save(5*n+1:5*n+2*m,obj.start_disp:obj.iteration).^2 + obj.x_save(5*n+2*m+1:5*n+4*m,obj.start_disp:obj.iteration).^2);
             hold(i,'on')
-            plot(i, i_mag);
-            for k=1:2*m
+            plot(i, i_mag');
+            for k=1:size(i_mag,1)
                 x_values = 1:(obj.iteration - (obj.start_disp - 1));                            %shift the index according to the
                 x_values = x_values(obj.i_limit_reached(k,obj.start_disp:obj.iteration));       %take out all the points where the limit was not reached
-                y_values = obj.x_save(k,obj.start_disp:obj.iteration);                          %trim the voltage values down to the desired length
+                y_values = i_mag(k,:);                          %trim the voltage values down to the desired length
                 y_values = y_values(obj.i_limit_reached(k,obj.start_disp:obj.iteration));      %take out all the points where the limit was not reached
                 plot(i,x_values,y_values,'xr','LineWidth',2);
             end

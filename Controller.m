@@ -1,6 +1,6 @@
 classdef Controller < handle
     properties(Constant)
-        penalty_factor_i = 10
+        penalty_factor_i = 0.5
         penalty_factor_v = 5
         penalty_factor_S = 2
         penalty_factor_f = 200
@@ -13,7 +13,8 @@ classdef Controller < handle
         end
         
         function i_limit = i_limit_reached(x,mygrid)
-            i_limit = (0 ~= Controller.getPenaltyID(x, mygrid)');
+            i_re_im = (0 ~= Controller.getPenaltyID(x, mygrid)');
+            i_limit = i_re_im(5*mygrid.n+1:5*mygrid.n+2*mygrid.m) | i_re_im(1+5*mygrid.n+2*mygrid.m:5*mygrid.n+4*mygrid.m);
         end
         
         function f_limit = f_limit_reached(x,mygrid)
@@ -54,17 +55,20 @@ classdef Controller < handle
             
         end
         
-        function val = getPenaltyS(state, mygrid)
-            val = Controller.penalty_factor_S*sum(max(state.p_g.^2 + state.q_g.^2 - mygrid.S_limit.^2,0));  %problem because the scheitelpunkt of the parabel is not at the limit point
+        function val = getPenaltyS(mystate, mygrid)
+            val = Controller.penalty_factor_S*sum(max(sqrt(mystate.p_g.^2 + mystate.q_g.^2) - mygrid.S_limit, 0).^2);
         end
         
-        function val = getPenaltySD(state, mygrid)
-            within_limits = (state.p_g.^2 + state.q_g.^2 <= mygrid.S_limit);
+        function val = getPenaltySD(mystate, mygrid)
+            within_limits = (mystate.p_g.^2 + mystate.q_g.^2 <= mygrid.S_limit);
             if min(within_limits) == 0
                 disp( 'S limit reached for at least one generator');
             end
-            pq_D = [2*(1-within_limits').*state.p_g', 2*(1-within_limits').*state.q_g'];
-            val = Controller.penalty_factor_S*[zeros(1,2*mygrid.n), pq_D, zeros(1,mygrid.n + 4*mygrid.m + 1)];
+            
+            generic_block = (Controller.penalty_factor_S*2*max(1-mygrid.S_limit./sqrt(mystate.p_g.^2 + mystate.q_g.^2),0))';
+            pq_D = [generic_block.*mystate.p_g', generic_block.*mystate.q_g'];
+            %pq_D = [2*(1-within_limits').*state.p_g', 2*(1-within_limits').*state.q_g'];
+            val = [zeros(1,2*mygrid.n), pq_D, zeros(1,mygrid.n + 4*mygrid.m + 1)];
         end
         
         function val = getPenaltyI(mystate, mygrid)
@@ -73,9 +77,12 @@ classdef Controller < handle
         end
         
         function val = getPenaltyID(mystate, mygrid)
-            within_limits = (mystate.i_re.^2 + mystate.i_im.^2 <= mygrid.i_limit);
+            %off_limits = (mystate.i_re.^2 + mystate.i_im.^2 >= mygrid.i_limit.^2)';
+            %i_D_old = Controller.penalty_factor_i*[2*off_limits.*((1 - mygrid.i_limit./sqrt(mystate.i_re.^2 + mystate.i_im.^2)).*mystate.i_re)',... 
+            %    2*off_limits.*((1 - mygrid.i_limit./sqrt(mystate.i_re.^2 + mystate.i_im.^2)).*mystate.i_im)'];
             
-            i_D = [2*(1-within_limits').*(2*(1 - mygrid.i_limit./sqrt(mystate.i_re.^2 + mystate.i_im.^2)).*mystate.i_re)', 2*(1-within_limits').*(2*(1 - mygrid.i_limit./sqrt(mystate.i_re.^2 + mystate.i_im.^2)).*mystate.i_im)'];
+            generic_block = (Controller.penalty_factor_i*2*max(1-mygrid.i_limit./sqrt(mystate.i_re.^2 + mystate.i_im.^2),0))';
+            i_D = [generic_block.*mystate.i_re', generic_block.*mystate.i_im'];
             val = Controller.penalty_factor_i*[zeros(1,5*mygrid.n), i_D, 0];
         end
         

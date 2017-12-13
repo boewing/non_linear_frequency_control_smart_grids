@@ -66,7 +66,7 @@ classdef Grid
             obj.p_ref_upper_limit_base = import_struct.p_ref_upper_limit_base; 
             obj.p_ref_lower_limit_base = import_struct.p_ref_lower_limit_base; 
             obj.is_generator = obj.p_ref_upper_limit_base > 0; 
-            obj.S_limit =           [ 1.0;  1.0;  Inf;   Inf];
+            obj.S_limit =           [ 1.0;  0.6;  Inf;   Inf];
             
             obj.f_upper_limit = 0.0; % in Hz
             obj.f_lower_limit = -0.0; % in Hz
@@ -87,6 +87,7 @@ classdef Grid
             
             obj.E = E_long(logical(sum(E_long)'),:);
             assert(min(sum(obj.E'))==1);
+            
         end
         
         %marginal cost of generation
