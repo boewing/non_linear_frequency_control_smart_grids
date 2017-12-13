@@ -101,16 +101,17 @@ classdef Recorder < handle
             legend(v,obj.node_legend);
             hold(v,'off')
             
+            i_mag = sqrt(obj.x_save(5*n+1:5*n+2*m,obj.start_disp:obj.iteration)'.^2 + obj.x_save(5*n+2*m+1:5*n+4*m,obj.start_disp:obj.iteration)'.^2);
             hold(i,'on')
-            plot(i, obj.x_save(5*n+1:5*n+2*m,obj.start_disp:obj.iteration)');
-            for k=(5*n+1):(5*n+2*m)
+            plot(i, i_mag);
+            for k=1:2*m
                 x_values = 1:(obj.iteration - (obj.start_disp - 1));                            %shift the index according to the
                 x_values = x_values(obj.i_limit_reached(k,obj.start_disp:obj.iteration));       %take out all the points where the limit was not reached
                 y_values = obj.x_save(k,obj.start_disp:obj.iteration);                          %trim the voltage values down to the desired length
                 y_values = y_values(obj.i_limit_reached(k,obj.start_disp:obj.iteration));      %take out all the points where the limit was not reached
                 plot(i,x_values,y_values,'xr','LineWidth',2);
             end
-            ylabel(i,'i_re: Current real part [p.u.]');
+            ylabel(i,'i: Line Current Amplitude [p.u.]');
             xlabel(i,'Iterations');
             legend(i,obj.line_legend);
             hold(i,'off')

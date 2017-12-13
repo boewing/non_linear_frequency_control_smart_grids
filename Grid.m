@@ -37,7 +37,7 @@ classdef Grid
             obj.n = size(A_onedirec,2); %number of nodes
             obj.m = size(A_onedirec,1); %number of lines
             A = [A_onedirec;-A_onedirec];
-            A_t = (A-A.^2)/2;
+            A_t = (A-A.^2)/2;           %delete all positive numbers = delete all endpoints
             R_half=[0.0192 0.0452 0.057 0.0132 0.0472]; %line resistance in p.u.
             X_half=[0.0575 0.1652 0.1737 0.0379 0.1983]; %line reactance in p.u.
             C_half=diag(1./(R_half + 1i*X_half));
@@ -62,7 +62,7 @@ classdef Grid
             
             obj.v_limit = 1.06*ones(obj.n,1); %voltage limits at each node in p.u.
             
-            import_struct = load('time_behaviour\p_ref_limits_ramp.mat'); 
+            import_struct = load('time_behaviour\p_ref_limits_step_load.mat'); 
             obj.p_ref_upper_limit_base = import_struct.p_ref_upper_limit_base; 
             obj.p_ref_lower_limit_base = import_struct.p_ref_lower_limit_base; 
             obj.is_generator = obj.p_ref_upper_limit_base > 0; 
@@ -86,7 +86,7 @@ classdef Grid
                 0]);                         %f
             
             obj.E = E_long(logical(sum(E_long)'),:);
-            assert(min(sum(obj.E'))==1);  
+            assert(min(sum(obj.E'))==1);
         end
         
         %marginal cost of generation

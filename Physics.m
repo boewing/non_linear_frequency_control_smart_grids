@@ -27,23 +27,6 @@ classdef Physics < handle
             end
         end
         
-        %this is the h function with a split in a fixed part and a part to
-        %change variables
-        %fix: p_ref ; variable: v, theta(2:n), p_g, i, and f
-        %not used anymore
-        function var = h_fix(mystate, mygrid, x_var)
-            n=mygrid.n;
-            m=mygrid.m;
-            tempstate = mystate;
-            tempstate.v = x_var(1:n);
-            assert(tempstate.theta(1)==0);
-            tempstate.theta = [0;x_var(1+n:2*n-1)];
-            tempstate.p_g = x_var(1+2*n-1:3*n-1);
-            tempstate.i = x_var(1+3*n-1:2*m+3*n-1);
-            tempstate.f = x_var(2*m+3*n);
-            var = Physics.h(tempstate,mygrid);
-        end
-        
         %%nabla h
         function n_h = n_h(mystate,mygrid) % has a reduced form: contains only the equations for p_g, q_g and p_ref
             V0 = mystate.v;
@@ -102,7 +85,7 @@ classdef Physics < handle
             %assert(0==norm(Physics.h(mystate,mygrid) - Physics.h_fix(mystate,mygrid, initial_x_var)));
             %rank_of_gradient = min(abs(eig([Physics.n_h(mystate,mygrid);mygrid.E_short])));
             %condition = norm([Physics.n_h(mystate,mygrid);mygrid.E_short])*norm(inv([Physics.n_h(mystate,mygrid);mygrid.E_short]))
-            new_x_var = fsolve(@(y) Physics.h_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Algorithm','levenberg-marquardt','Display', 'off', 'FunctionTolerance',1e-10));
+            new_x_var = fsolve(@(y) Physics.h_small_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Algorithm','levenberg-marquardt','Display','off','FunctionTolerance',1e-10));
             %new_x_var = fsolve(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-8));
             %new_x_var = lsqnonlin(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var, [], [], optimoptions('lsqnonlin','Display', 'off', 'FunctionTolerance',1e-8));
             
@@ -111,8 +94,13 @@ classdef Physics < handle
             mystate.p_g    = new_x_var(1+2*mygrid.n:3*mygrid.n);
             mystate.q_g    = new_x_var(1+3*mygrid.n:4*mygrid.n);
             mystate.p_ref  = new_x_var(1+4*mygrid.n:5*mygrid.n);
-            mystate.i_re   = new_x_var(1+5*mygrid.n:2*mygrid.m+5*mygrid.n);    
-            mystate.i_im   = new_x_var(1+2*mygrid.m+5*mygrid.n:4*mygrid.m+5*mygrid.n);
+            
+            u = mystate.v.*exp(1j*mystate.theta);
+            ii = mygrid.Q*u;
+            mystate.i_re   = real(ii);
+            mystate.i_im   = imag(ii);
+            %mystate.i_re   = new_x_var(1+5*mygrid.n:2*mygrid.m+5*mygrid.n);    
+            %mystate.i_im   = new_x_var(1+2*mygrid.m+5*mygrid.n:4*mygrid.m+5*mygrid.n);
             mystate.f      = new_x_var(1+4*mygrid.m+5*mygrid.n);
             
             Physics.ctrl_angle_correction(mystate);
@@ -136,6 +124,15 @@ classdef Physics < handle
             val = [Physics.h(x_var,mygrid); mygrid.E*(mystate.getx - x_var)];
         end
         
-        
+        %this is the constraint function without the line currents. These
+        %constraints are enough for the retraction as the line currents can
+        %be calculated directly from the rest.
+        function val = h_small_aug(mystate, mygrid, x_var)
+            assert(isa(mystate,'State'));
+            
+            h = Physics.h(x_var,mygrid);
+            
+            val = [h(1:3*mygrid.n); mygrid.E*(mystate.getx - x_var)];
+        end
     end
 end

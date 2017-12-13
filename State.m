@@ -25,7 +25,7 @@ classdef State < handle
             obj.i_im = zeros(2*mygrid.m,1);
             obj.f = 0;
             obj = Physics.retraction(obj,mygrid);
-            
+            assert(max(abs(Physics.h(obj,mygrid))) < 1e-3, 'retraction failed');
         end
         
         function x = getx(obj)

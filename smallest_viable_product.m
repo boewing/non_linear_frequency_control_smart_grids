@@ -5,7 +5,7 @@ mygrid = Grid();
 x = State(mygrid);
 
 %run the simulation and record
-iterations=500;
+iterations=1000;
 myrec = Recorder(x, Controller.Jt(x,mygrid),norm(Physics.h(x,mygrid)),iterations);
 
 for k=1:iterations
