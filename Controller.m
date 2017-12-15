@@ -22,17 +22,43 @@ classdef Controller < handle
             f_limit = (abs(x.f) > 10e-3);
         end
         
-        function S_limit = S_limit_reached(x,mygrid)
-            S_limit = (0 ~= Controller.getPenaltySD(x, mygrid)');
+        function S_limit = S_limit_reached(mystate,mygrid)
+            S_limit = (mystate.p_g.^2 + mystate.q_g.^2 - mygrid.S_limit.^2 >= -10e-4);
+        end
+        
+        % matrix to extend Aeq in quadprog (the inner optimization)
+        % matrix has dimensions n x (5*n + 4*m + 1)
+        function [A, b] = S_hard_constraint(x, mygrid)            
+%             k = 2;
+%             x_circle = mygrid.S_limit(k)*cos(linspace(0,2*pi,1000));
+%             y_circle = mygrid.S_limit(k)*sin(linspace(0,2*pi,1000));
+%             gamma = mygrid.S_limit(k)/sqrt(x.p_g(k)^2 + x.q_g(k)^2);
+%             x_line = gamma*x.p_g(k) + linspace(-3,+3,10).*x.q_g(k);
+%             y_line = gamma*x.q_g(k) - linspace(-3,+3,10).*x.p_g(k);
+%             figure(3);
+%             plot(x_circle, y_circle, x_line, y_line, x.p_g(k)*[1, gamma], x.q_g(k)*[1 gamma]);
+%             axis equal;
+%             drawnow;
+%                 
+            b = mygrid.S_limit.*sqrt(x.p_g.^2 + x.q_g.^2) - x.p_g.^2 - x.q_g.^2;
+            A = [zeros(mygrid.n,2*mygrid.n), diag(x.p_g), diag(x.q_g), zeros(mygrid.n,mygrid.n + 4*mygrid.m + 1)];
+            bounded = (b ~= Inf);
+            
+            A = A(bounded,:);
+            b = b(bounded);
         end
         
         function d = getStep(x, mygrid, k)
             H=eye(5*mygrid.n + 4*mygrid.m + 1);
             ff = Controller.step_size*Controller.n_Jt(x,mygrid);
+            [A, b] = Controller.S_hard_constraint(x, mygrid);
             Aeq = Physics.n_h(x,mygrid);
-            beq = zeros(size(Aeq,1),1);
+            beq = zeros(3*mygrid.n + 4*mygrid.m,1);
             [lb, ub] = mygrid.bounds(x,k);
-            d = quadprog(H,ff,[],[],Aeq,beq,lb,ub,[],optimoptions('quadprog', 'Display', 'off'));  
+            %d = quadprog(H,ff,[],[],Aeq,beq,lb,ub,[],optimoptions('quadprog'));              
+            %assert(min(b - A*d) >= 0)                      %condition to
+            %check if there is an active constraint
+            d = quadprog(H,ff,A,b,Aeq,beq,lb,ub,[],optimoptions('quadprog','Display','off'));
             assert(length(d) == 5*mygrid.n + 4*mygrid.m + 1);
             %     assert(max(Aeq*d) < 1e-10, 'next step is not in the tangent plane');
         end
@@ -42,16 +68,14 @@ classdef Controller < handle
             val = mygrid.cost_of_generation(state)...
                 + Controller.getPenaltyI(state, mygrid) ...
                 + Controller.getPenaltyV(state, mygrid) ...
-                + Controller.getPenaltyF(state, mygrid) ...
-                + Controller.getPenaltyS(state, mygrid);
+                + Controller.getPenaltyF(state, mygrid);
         end
         
         function val = n_Jt(state, mygrid)
             val = mygrid.cost_of_generationD(state) ...
                 + Controller.getPenaltyID(state, mygrid) ...
                 + Controller.getPenaltyVD(state, mygrid) ...
-                + Controller.getPenaltyFD(state, mygrid) ...
-                + Controller.getPenaltySD(state, mygrid);
+                + Controller.getPenaltyFD(state, mygrid);
             
         end
         

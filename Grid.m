@@ -76,14 +76,14 @@ classdef Grid
             obj.f_lower_limit = -0.0; % in Hz
             
             obj.cost_vector_p_g = [1.2 1.1  0   0]';
-            obj.cost_vector_q_g = [0.3 0.3  0   0]';
+            obj.cost_vector_q_g = [0.6 0.6  0   0]';
             
             %this is a selector matrix selecting the parts of the state
             %which are fixed
             E_long = diag([obj.is_PV',...    %v
                 [1,zeros(1,obj.n-1)],...     %theta
                 zeros(1,obj.n),...           %p_g
-                ~obj.is_PQ',...              %q_g
+                obj.is_PQ',...               %q_g
                 ones(1,obj.n),...            %p_ref
                 zeros(1,2*obj.m),...         %i_re
                 zeros(1,2*obj.m),...         %i_im
@@ -91,6 +91,7 @@ classdef Grid
             
             obj.E = E_long(logical(sum(E_long)'),:);
             assert(min(sum(obj.E'))==1);
+            assert(sum(sum(obj.E))==2*obj.n + 1);
             
         end
         

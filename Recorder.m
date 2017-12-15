@@ -12,7 +12,7 @@ classdef Recorder < handle
         f_function_save
         h_function_save
         iteration               = 0
-        transient_length        = 100
+        transient_length        = 1
         start_disp              = 1
         m
         n
@@ -61,8 +61,8 @@ classdef Recorder < handle
             obj.v_limit_reached(:,obj.iteration) = logical(Controller.v_limit_reached(mystate, mygrid));
             obj.i_limit_reached(:,obj.iteration) = logical(Controller.i_limit_reached(mystate, mygrid));
             obj.f_limit_reached(:,obj.iteration) = logical(Controller.f_limit_reached(mystate, mygrid));
-            obj.p_g_limit_reached(:,obj.iteration) = logical(Controller.S_limit_reached(mystate, mygrid));
-            obj.q_g_limit_reached(:,obj.iteration) = logical(Controller.S_limit_reached(mystate, mygrid));
+            obj.p_g_limit_reached(1+2*mygrid.n:3*mygrid.n,obj.iteration) = logical(Controller.S_limit_reached(mystate, mygrid));
+            obj.q_g_limit_reached(1+3*mygrid.n:4*mygrid.n,obj.iteration) = logical(Controller.S_limit_reached(mystate, mygrid));
         end
         function plotV(obj)
             figure(1);

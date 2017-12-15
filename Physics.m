@@ -106,7 +106,7 @@ classdef Physics < handle
             %assert(0==norm(Physics.h(mystate,mygrid) - Physics.h_fix(mystate,mygrid, initial_x_var)));
             %rank_of_gradient = min(abs(eig([Physics.n_h(mystate,mygrid);mygrid.E_short])));
             %condition = norm([Physics.n_h(mystate,mygrid);mygrid.E_short])*norm(inv([Physics.n_h(mystate,mygrid);mygrid.E_short]))
-            new_x_var = fsolve(@(y) Physics.h_small_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Algorithm','levenberg-marquardt','Display','off','FunctionTolerance',1e-10));
+            new_x_var = fsolve_no_exit_msg(@(y) Physics.h_small_aug(mystate, mygrid, y), xx, optimoptions('fsolve','Algorithm','levenberg-marquardt','Display','off','FunctionTolerance',1e-10));
             %new_x_var = fsolve(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var,optimoptions('fsolve','Display', 'off', 'FunctionTolerance',1e-8));
             %new_x_var = lsqnonlin(@(y) Physics.h_fix(mystate, mygrid, y), initial_x_var, [], [], optimoptions('lsqnonlin','Display', 'off', 'FunctionTolerance',1e-8));
             

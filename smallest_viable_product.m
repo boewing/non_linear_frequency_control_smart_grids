@@ -22,11 +22,12 @@ for k=1:iterations
     %retraction
     assert(abs(x.theta(1)) < 1e-3, 'reference bus has non-zero voltage angle');              %check that the angle reference stays 0
     x = Physics.retraction(x, mygrid);
-    %assert(max(abs(Physics.h(x,mygrid))) < 1e-1, 'retraction failed');    %check that the retraction works makes h(x)=0
+    %assert(max(abs(Physics.h(x,mygrid))) < 1e-3, 'retraction failed');    %check that the retraction works makes h(x)=0
     
     %check if retraction is transverse to the tangent plane
     T = [mygrid.E; Physics.n_h(x, mygrid)]; %mygrid.E_short;
-    if rank(T) < 5*mygrid.n + 2*mygrid.m + 1
+    assert(size(T,1) == size(T,2) && size(T,1) == 5*mygrid.n + 4*mygrid.m + 1);
+    if rank(T) < 5*mygrid.n + 4*mygrid.m + 1
         disp(['non-transverse retraction: Rank(T) = ', num2str(rank(T)), ' in iteration ', num2str(k)]);
     end
     
