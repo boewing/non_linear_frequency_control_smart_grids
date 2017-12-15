@@ -26,6 +26,8 @@ classdef Grid
         cost_vector_q_g
         E
         is_generator
+        is_PV
+        is_PQ
     end
     
     methods
@@ -61,6 +63,8 @@ classdef Grid
             obj.i_limit = 1.06*ones(2*obj.m,1); % line current limit in p.u.
             
             obj.v_limit = 1.06*ones(obj.n,1); %voltage limits at each node in p.u.
+            obj.is_PV = [true false false false]';
+            obj.is_PQ = ~obj.is_PV;
             
             import_struct = load('time_behaviour\p_ref_limits_step_load.mat'); 
             obj.p_ref_upper_limit_base = import_struct.p_ref_upper_limit_base; 
@@ -76,10 +80,10 @@ classdef Grid
             
             %this is a selector matrix selecting the parts of the state
             %which are fixed
-            E_long = diag([zeros(1,obj.n),...   %v
+            E_long = diag([obj.is_PV',...    %v
                 [1,zeros(1,obj.n-1)],...     %theta
                 zeros(1,obj.n),...           %p_g
-                ones(1,obj.n),...            %q_g
+                ~obj.is_PQ',...              %q_g
                 ones(1,obj.n),...            %p_ref
                 zeros(1,2*obj.m),...         %i_re
                 zeros(1,2*obj.m),...         %i_im
