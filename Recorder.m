@@ -73,7 +73,8 @@ classdef Recorder < handle
         function plotAll(obj)
             f2 = figure(2);
             clf
-            f2.Position = [0 0 1900 1000];
+            f2.OuterPosition = [0 0 1440 930];
+            %f2.WindowStyle = 'docked';
             mp = 2;
             np = 4;
             m = obj.m;

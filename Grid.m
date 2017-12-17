@@ -12,16 +12,12 @@ classdef Grid
         m
         K
         i_limit
-        penalty_factor_i
         v_limit
-        penalty_factor_v
         p_ref_upper_limit_base
         p_ref_lower_limit_base
-        penalty_factor_S
         S_limit
         f_upper_limit
         f_lower_limit
-        penalty_factor_f
         cost_vector_p_g
         cost_vector_q_g
         E
@@ -49,7 +45,7 @@ classdef Grid
             obj.A = A;
             obj.A_t = A_t;
             
-            obj.K=[-10.0 -10.0 0 0.01]'; %stiffness of the primary frequency controller at each generator or load in p.u./Hz
+            obj.K=[-10.0 -0.0 0 0.01]'; %stiffness of the primary frequency controller at each generator or load in p.u./Hz
             
             Gsh = [0 0 0 0 0]; %shunt conductance in MW at V = 1 p.u 
             Bsh = [0 0 0 19 0]; % shunt susceptance in MVar at V = 1 p.u. 
@@ -66,16 +62,16 @@ classdef Grid
             obj.is_PV = [true false false false]';
             obj.is_PQ = ~obj.is_PV;
             
-            import_struct = load('time_behaviour\p_ref_limits_step_load.mat'); 
+            import_struct = load('time_behaviour\p_ref_limits_wind.mat'); 
             obj.p_ref_upper_limit_base = import_struct.p_ref_upper_limit_base; 
             obj.p_ref_lower_limit_base = import_struct.p_ref_lower_limit_base; 
             obj.is_generator = obj.p_ref_upper_limit_base > 0; 
-            obj.S_limit =           [ 1.0;  0.6;  Inf;   Inf];
+            obj.S_limit =           [ 0.9;  1;  Inf;   Inf];
             
             obj.f_upper_limit = 0.0; % in Hz
             obj.f_lower_limit = -0.0; % in Hz
             
-            obj.cost_vector_p_g = [1.2 1.1  0   0]';
+            obj.cost_vector_p_g = [1.2 0.5    0   0]';
             obj.cost_vector_q_g = [0.6 0.6  0   0]';
             
             %this is a selector matrix selecting the parts of the state

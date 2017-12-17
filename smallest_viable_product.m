@@ -5,7 +5,7 @@ mygrid = Grid();
 x = State(mygrid);
 
 %run the simulation and record
-iterations=500;
+iterations=1500;
 myrec = Recorder(x, Controller.Jt(x,mygrid),norm(Physics.h(x,mygrid)),iterations);
 
 for k=1:iterations
@@ -23,6 +23,7 @@ for k=1:iterations
     assert(abs(x.theta(1)) < 1e-3, 'reference bus has non-zero voltage angle');              %check that the angle reference stays 0
     x = Physics.retraction(x, mygrid);
     %assert(max(abs(Physics.h(x,mygrid))) < 1e-3, 'retraction failed');    %check that the retraction works makes h(x)=0
+    assert(abs(x.f) < 0.2,'massive frequency deviation: maybe not sufficient generation available');
     
     %check if retraction is transverse to the tangent plane
     T = [mygrid.E; Physics.n_h(x, mygrid)]; %mygrid.E_short;
