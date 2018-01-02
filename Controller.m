@@ -3,7 +3,7 @@ classdef Controller < handle
         penalty_factor_i = 0.5
         penalty_factor_v = 5
         penalty_factor_S = 2
-        penalty_factor_f = 150
+        penalty_factor_f = 100
         step_size = 0.5
     end
     
