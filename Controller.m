@@ -4,7 +4,7 @@ classdef Controller < handle
         penalty_factor_v = 5
         penalty_factor_S = 2
         penalty_factor_f = 100
-        step_size = 0.5
+        step_size = 0.25
     end
     
     methods(Static)

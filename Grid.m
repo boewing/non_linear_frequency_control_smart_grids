@@ -1,5 +1,6 @@
 classdef Grid
     properties
+        name
         base_MVA
         base_V
         A
@@ -62,10 +63,17 @@ classdef Grid
             obj.is_PV = [true false false false]';
             obj.is_PQ = ~obj.is_PV;
             
-            import_struct = load('time_behaviour\p_ref_limits_wind.mat'); 
+            obj.name = 'wind';
+            obj.name = 'step_load';
+            
+            if strcmp(obj.name, 'wind')
+                import_struct = load('time_behaviour\p_ref_limits_wind.mat'); 
+            else
+                import_struct = load('time_behaviour\p_ref_limits_step_load.mat'); 
+            end
             obj.p_ref_upper_limit_base = import_struct.p_ref_upper_limit_base; 
             obj.p_ref_lower_limit_base = import_struct.p_ref_lower_limit_base; 
-            obj.is_generator = obj.p_ref_upper_limit_base > 0; 
+            obj.is_generator = obj.p_ref_upper_limit_base(:,1) > 0; 
             obj.S_limit =           [ 0.9;  1;  Inf;   Inf];
             
             obj.f_upper_limit = 0.0; % in Hz

@@ -1,4 +1,6 @@
 function [x,FVAL,EXITFLAG,OUTPUT,JACOB] = fsolve_no_exit_msg(FUN,x,options,varargin)
+%slightly changed version of FSOLVE without a exit message. This saves a
+%lot of time.
 %FSOLVE solves systems of nonlinear equations of several variables.
 %
 %   FSOLVE attempts to solve equations of the form:

@@ -12,7 +12,7 @@ classdef State < handle
     
     methods
         function obj = State(mygrid)
-            obj.v = ones(mygrid.n,1);
+            obj.v = 1.06*ones(mygrid.n,1);
             obj.theta = zeros(mygrid.n,1);
             
             min_demand = -sum(min(mygrid.p_ref_upper_limit(1),0));

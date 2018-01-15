@@ -5,8 +5,12 @@ mygrid = Grid();
 x = State(mygrid);
 
 %run the simulation and record
-iterations=3500;
-myrec = Recorder(x, Controller.Jt(x,mygrid),norm(Physics.h(x,mygrid)),iterations);
+if strcmp(mygrid.name, 'wind')
+    iterations=3500;
+else
+    iterations = 430;
+end
+myrec = Recorder(x, Controller.Jt(x,mygrid),norm(Physics.h(x,mygrid)),iterations, mygrid);
 
 for k=1:iterations
     
